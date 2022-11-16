@@ -237,10 +237,16 @@ Equipo* getEquipo(nodoGrupoEquipo *grupo, int indexEquipo) { // devuelve un equi
 }
 
 void agregarPartido(nodoPartido **lista, Equipo *eq1, Equipo *eq2) {
-    // hacer
+    
 }
 
 void cargarPartidosGrupos(nodoPartido **lista, Grupo grupo) {
+    printf("%s vs %s\n", getEquipo(grupo.equipos, 0), getEquipo(grupo.equipos, 1));
+    printf("%s vs %s\n", getEquipo(grupo.equipos, 2), getEquipo(grupo.equipos, 3));
+    printf("%s vs %s\n", getEquipo(grupo.equipos, 0), getEquipo(grupo.equipos, 2));
+    printf("%s vs %s\n", getEquipo(grupo.equipos, 1), getEquipo(grupo.equipos, 3));
+    printf("%s vs %s\n", getEquipo(grupo.equipos, 0), getEquipo(grupo.equipos, 3));
+    printf("%s vs %s\n", getEquipo(grupo.equipos, 1), getEquipo(grupo.equipos, 2));
     agregarPartido(lista, getEquipo(grupo.equipos, 0), getEquipo(grupo.equipos, 1));
     agregarPartido(lista, getEquipo(grupo.equipos, 2), getEquipo(grupo.equipos, 3));
     agregarPartido(lista, getEquipo(grupo.equipos, 0), getEquipo(grupo.equipos, 2));
@@ -278,6 +284,5 @@ int main()
 
     GrupoPartido partidosGrupo[VALIDOS_GRUPO];
     crearArregloGrupoPartidos(partidosGrupo, grupos);
-    printf("%d", partidosGrupo[0].partidos->partido.fecha);
     return 0;
 }
