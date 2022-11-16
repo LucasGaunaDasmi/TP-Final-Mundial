@@ -1,4 +1,3 @@
-
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -63,29 +62,48 @@ typedef struct GrupoPartido
 
 ///PROTOTIPADO DE FUNCIONES
 
-nodoEquipo* crearNodoEquipo(Equipo equipo);                                 ///CREA UN NODO EQUIPO (PARA LA LISTA DE EQUIPOS GENERAL)
+///1-
 
-void insertarAlFinalEquipo(nodoEquipo**,Equipo aInsertar);                  ///INSERTA UN NODO EQUIPO A LA LISTA GENERAL DE EQUIPOS
+nodoEquipo* crearNodoEquipo(Equipo equipo);                                               ///CREA UN NODO EQUIPO (PARA LA LISTA DE EQUIPOS GENERAL)
 
-void leerArchivo(nodoEquipo** listaDeEquipos);                              ///LEE NUESTRO ARCHIVO CON LOS EQUIPOS Y PROBABILIDADES Y LO CARGA A LA LISTA GENERAL DE EQUIPOS
+void insertarAlFinalEquipo(nodoEquipo**,Equipo aInsertar);                                ///INSERTA UN NODO EQUIPO A LA LISTA GENERAL DE EQUIPOS
 
-void inicializarGrupos(Grupo* grupos, int validosGrupo);                    ///LE PONE LAS LETRAS(NOMBRE) A CADA GRUPO DEL ARREGLO DE GRUPOS E INICIALIZA LA LISTA DENTRO DEL ARREGLO
+void leerArchivo(nodoEquipo** listaDeEquipos);                                            ///LEE NUESTRO ARCHIVO CON LOS EQUIPOS Y PROBABILIDADES Y LO CARGA A LA LISTA GENERAL DE EQUIPOS
 
-nodoGrupoEquipo* crearNodoGrupoEquipo(Equipo* equipo);                      ///CREA UN NODO GRUPOEQUIPO (PARA LA LISTA DE EQUIPOS QUE ESTA EN CADA CELDA DEL ARREGLO DE GRUPOS)
+///2-
 
-void insertarEnElGrupo(Grupo*, int, Equipo*);                               ///INSERTA EL NODO GRUPOEQUIPO CREADO EN LA LISTA DE CADA CELDA DEL ARREGLO)
+void inicializarGrupos(Grupo*, int);                                                      ///LE PONE LAS LETRAS(NOMBRE) A CADA GRUPO DEL ARREGLO DE GRUPOS E INICIALIZA LA LISTA DENTRO DEL ARREGLO
 
-void cargarGrupos(Grupo*, int, nodoEquipo*);                                ///FUNCION DE LLAMADA EN EL MAIN QUE INVOCA LAS 3 FUNCIONES ANTERIORES
+nodoGrupoEquipo* crearNodoGrupoEquipo(Equipo* equipo);                                    ///CREA UN NODO GRUPOEQUIPO (PARA LA LISTA DE EQUIPOS QUE ESTA EN CADA CELDA DEL ARREGLO DE GRUPOS)
 
-void mostrarGrupos(Grupo*, int);                                            ///MUESTRA (DESPUES TENDRIAMOS QUE HACER UNA PARA MOSTRAR LAS POSICIONES EN ORDEN)
+void insertarEnElGrupo(Grupo*, int, Equipo*);                                             ///INSERTA EL NODO GRUPOEQUIPO CREADO EN LA LISTA DE CADA CELDA DEL ARREGLO)
 
-nodoPartido* crearNodoPartido(Partido);
+void cargarGrupos(Grupo*, int, nodoEquipo*);                                              ///FUNCION DE LLAMADA EN EL MAIN QUE INVOCA LAS 3 FUNCIONES ANTERIORES
 
-Equipo* getEquipo(nodoGrupoEquipo*, int);                                   /// devuelve un equipo de un grupo seg�n su posici�n en el mismo
+void mostrarGrupos(Grupo*, int);                                                          ///MUESTRA (DESPUES TENDRIAMOS QUE HACER UNA PARA MOSTRAR LAS POSICIONES EN ORDEN)
+
+///3-
+///4-
+
+int existeEquipo(char*, nodoEquipo*);
+
+nodoPartido* crearNodoPartido(Partido);                                                   ///CREA UN NODO CON UNA ESTRUCTURA PARTIDO Y PUNTERO AL SIGUIENTE
+
+Equipo* getEquipo(nodoGrupoEquipo*,int*);                                                 ///DEVUELVE UN EQUIPO DE UN GRUPO SEGUN SU POSICION EN LA SUBLISTA
+
+void agregarPartido(nodoPartido**, Equipo*, Equipo*);
+
+void cargarPartidosGrupos(nodoPartido**, Grupo);
+
+void crearArregloGrupoPartidosRandom(GrupoPartido*, Grupo*);
+
+void crearArregloGrupoPartidosManipulado(partidosGrupo, grupos, equipoElegido, opcion2);
+
 
 ///IMPLEMENTACION DE FUNCIONES
 
 ///1-
+
 nodoEquipo* crearNodoEquipo(Equipo equipo)
 {
     nodoEquipo* nuevo = (nodoEquipo*)malloc(sizeof(nodoEquipo));
@@ -132,6 +150,7 @@ void leerArchivo(nodoEquipo** listaDeEquipos)
 }
 
 ///2-
+
 void inicializarGrupos(Grupo* grupos, int validosGrupo)
 {
     char letras[8]= "ABCDEFGH";
@@ -201,24 +220,26 @@ void mostrarGrupos(Grupo* grupos, int validos)
         printf("GRUPO %c\n",grupos[i].letra);
         printf("\t\tMP\tW\tD\tL\tGF\tGA\tGD\tPts\n");
 
-        while(grupos[i].equipos != NULL)
+        nodoGrupoEquipo* seg = grupos[i].equipos;
+
+        while(seg != NULL)
         {
-            printf("%s\t",grupos[i].equipos->equipo->nomEquipo);
+            printf("%s\t",seg->equipo->nomEquipo);
             {
-                if(strlen(grupos[i].equipos->equipo->nomEquipo)<=7)
+                if(strlen(seg->equipo->nomEquipo)<=7)
                 {
                     printf("\t");
                 }
             }
-            printf("%i\t", grupos[i].equipos->equipo->mp);                                                                       ///JUGADOS
-            printf("%i\t", grupos[i].equipos->equipo->win);                                                                      ///GANADOS
-            printf("%i\t", grupos[i].equipos->equipo->mp - grupos[i].equipos->equipo->win - grupos[i].equipos->equipo->loss);    ///EMPATADOS
-            printf("%i\t", grupos[i].equipos->equipo->loss);                                                                     ///PERDIDOS
-            printf("%i\t", grupos[i].equipos->equipo->gf);                                                                       ///GOLES A FAVOR
-            printf("%i\t", grupos[i].equipos->equipo->ga);                                                                       ///GOLES EN CONTRA
-            printf("%i\t", grupos[i].equipos->equipo->gf - grupos[i].equipos->equipo->ga);                                       ///DIFERENCIA DE GOL
-            printf("%i\n", grupos[i].equipos->equipo->pts);                                                                      ///PUNTOS
-            grupos[i].equipos = grupos[i].equipos->siguiente;
+            printf("%i\t", seg->equipo->mp);                                                                       ///JUGADOS
+            printf("%i\t", seg->equipo->win);                                                                      ///GANADOS
+            printf("%i\t", seg->equipo->mp - grupos[i].equipos->equipo->win - grupos[i].equipos->equipo->loss);    ///EMPATADOS
+            printf("%i\t", seg->equipo->loss);                                                                     ///PERDIDOS
+            printf("%i\t", seg->equipo->gf);                                                                       ///GOLES A FAVOR
+            printf("%i\t", seg->equipo->ga);                                                                       ///GOLES EN CONTRA
+            printf("%i\t", seg->equipo->gf - grupos[i].equipos->equipo->ga);                                       ///DIFERENCIA DE GOL
+            printf("%i\n", seg->equipo->pts);                                                                      ///PUNTOS
+            seg = seg->siguiente;
         }
 
         printf("----------------------------------------------------------------------------\n\n");
@@ -227,6 +248,26 @@ void mostrarGrupos(Grupo* grupos, int validos)
 
 ///3-
 ///4-
+
+int existeEquipo(char* nombreBuscado, nodoEquipo* listaDeEquipos)
+{
+    if(listaDeEquipos)
+    {
+        if(strcmpi(listaDeEquipos->equipo.nomEquipo, nombreBuscado) == 0)
+        {
+            return 1;
+        }
+        else
+        {
+            existeEquipo(nombreBuscado,listaDeEquipos->siguiente);
+        }
+    }
+    else
+    {
+        return 0;
+    }
+}
+
 nodoPartido* crearNodoPartido(Partido insertar)
 {
     nodoPartido* nuevo = (nodoPartido*)malloc(sizeof(nodoPartido));
@@ -236,7 +277,7 @@ nodoPartido* crearNodoPartido(Partido insertar)
     return nuevo;
 }
 
-Equipo* getEquipo(nodoGrupoEquipo* grupo,int indexEquipo)
+Equipo* getEquipo(nodoGrupoEquipo* grupo, int* indexEquipo)
 {
     for (int i = 0; i < indexEquipo; i++)
     {
@@ -275,7 +316,7 @@ void agregarPartido(nodoPartido** lista, Equipo* eq1, Equipo* eq2)
 
 
     probabilidadTotal = probabilidadEmpate + probabilidadPrimero + probabilidadSegundo;
-//    printf("Probabiliad total = %i\n",probabilidadTotal);
+    ///printf("Probabiliad total = %i\n",probabilidadTotal);
 
     resultado = rand() % (probabilidadTotal+1);
 
@@ -298,9 +339,6 @@ void agregarPartido(nodoPartido** lista, Equipo* eq1, Equipo* eq2)
                 //terminar
         }
     }
-
-
-
 }
 
 void cargarPartidosGrupos(nodoPartido** lista, Grupo grupo)
@@ -308,18 +346,18 @@ void cargarPartidosGrupos(nodoPartido** lista, Grupo grupo)
     /*printf("%s vs %s\n", getEquipo(grupo.equipos, 0), getEquipo(grupo.equipos, 1));
     printf("%s vs %s\n", getEquipo(grupo.equipos, 2), getEquipo(grupo.equipos, 3));
     printf("%s vs %s\n", getEquipo(grupo.equipos, 0), getEquipo(grupo.equipos, 2));
-    printf("%s vs %s\n", getEquipo(grupo.equipos, 1), getEquipo(grupo.equipos, 3));
-    printf("%s vs %s\n", getEquipo(grupo.equipos, 0), getEquipo(grupo.equipos, 3));
-    printf("%s vs %s\n", getEquipo(grupo.equipos, 1), getEquipo(grupo.equipos, 2));*/
+    printf("%s vs %s\n", getEquipo(grupo.equipos, 3), getEquipo(grupo.equipos, 1));
+    printf("%s vs %s\n", getEquipo(grupo.equipos, 1), getEquipo(grupo.equipos, 2));
+    printf("%s vs %s\n", getEquipo(grupo.equipos, 3), getEquipo(grupo.equipos, 0));*/
     agregarPartido(lista, getEquipo(grupo.equipos, 0), getEquipo(grupo.equipos, 1));
     agregarPartido(lista, getEquipo(grupo.equipos, 2), getEquipo(grupo.equipos, 3));
     agregarPartido(lista, getEquipo(grupo.equipos, 0), getEquipo(grupo.equipos, 2));
-    agregarPartido(lista, getEquipo(grupo.equipos, 1), getEquipo(grupo.equipos, 3));
-    agregarPartido(lista, getEquipo(grupo.equipos, 0), getEquipo(grupo.equipos, 3));
+    agregarPartido(lista, getEquipo(grupo.equipos, 3), getEquipo(grupo.equipos, 1));
     agregarPartido(lista, getEquipo(grupo.equipos, 1), getEquipo(grupo.equipos, 2));
+    agregarPartido(lista, getEquipo(grupo.equipos, 3), getEquipo(grupo.equipos, 0));
 }
 
-void crearArregloGrupoPartidos(GrupoPartido partidosGrupo[VALIDOS_GRUPO], Grupo grupos[VALIDOS_GRUPO])
+void crearArregloGrupoPartidosRandom(GrupoPartido partidosGrupo[VALIDOS_GRUPO], Grupo grupos[VALIDOS_GRUPO])
 {
     for (int i = 0; i < VALIDOS_GRUPO; i++)
     {
@@ -329,11 +367,38 @@ void crearArregloGrupoPartidos(GrupoPartido partidosGrupo[VALIDOS_GRUPO], Grupo 
     }
 }
 
+void crearArregloGrupoPartidosManipulado(GrupoPartido partidosGrupo[VALIDOS_GRUPO], Grupo grupos[VALIDOS_GRUPO], char* equipoElegido, int opcion)   ////////PSEUDOCODIGO----FALTA HACER
+{
+    int flag;
+
+    for (int i = 0; i < VALIDOS_GRUPO; i++)
+    {
+        if('EL EQUIPO DESEADO NO ESTA EN ESTE GRUPO')       /// HACEMOS RANDOM NORMAL
+        {
+            partidosGrupo[i].letra = grupos[i].letra;
+            partidosGrupo[i].partidos = NULL;
+            cargarPartidosGrupos(&(partidosGrupo->partidos), grupos[i]);
+        }
+        else
+        {
+            do
+            {
+                cargarPartidosGrupos(&(partidosGrupo->partidos), grupos[i]);
+                flag = ('ES EL RESULTADO DESEADO?');  ///   0 = NO         1 = SI
+            }while(flag == 0);
+        }
+    }
+}
 
 ///MAIN
 
 int main()
 {
+    printf("SIMULADOR DEL MUNDIAL QATAR 2022:\n\n");
+    int opcion;
+    int opcion2;
+    int flag;
+    char equipoElegido[20];
     Grupo grupos[VALIDOS_GRUPO];
     nodoEquipo* listaDeEquipos = NULL;
 
@@ -343,14 +408,59 @@ int main()
     ///2-
     inicializarGrupos(grupos, VALIDOS_GRUPO);
     cargarGrupos(grupos, VALIDOS_GRUPO, listaDeEquipos);
-    ///mostrarGrupos(grupos, VALIDOS_GRUPO);
+    mostrarGrupos(grupos, VALIDOS_GRUPO);
 
 
     ///3-
     ///4-
 
     GrupoPartido partidosGrupo[VALIDOS_GRUPO];
-    crearArregloGrupoPartidos(partidosGrupo, grupos);
 
+    printf("Seleccione una opcion:\n");
+    printf("1) Decidir todos los resultados por probabilidad.\n");
+    printf("2) Elegir el resultado de un equipo.\n");
+    fflush(stdin);
+    scanf("%i",&opcion);
+    while(opcion != 1 && opcion !=2)
+    {
+        printf("\nOpcion incorrecta, vuelva a intentarlo.\n");
+        fflush(stdin);
+        scanf("%i",&opcion);
+    }
+    switch(opcion)
+    {
+    case 1:
+        crearArregloGrupoPartidosRandom(partidosGrupo, grupos);                             /// OPCION TODO RANDOM
+        break;
+
+    case 2:
+        printf("\nElija el equipo: ");
+        fflush(stdin);
+        gets(equipoElegido);
+        flag = existeEquipo(equipoElegido, listaDeEquipos);
+
+        while(flag == 0)
+        {
+            printf("El equipo no existe, vuelva a intentarlo: ");
+            fflush(stdin);
+            gets(equipoElegido);
+            flag = existeEquipo(equipoElegido, listaDeEquipos);
+        }
+
+        printf("\nSeleccione una opcion:\n");
+        printf("1) Clasifica.\n");
+        printf("2) No clasifica.\n");
+        fflush(stdin);
+        scanf("%i",&opcion2);
+
+        while(opcion2 != 1 && opcion2 !=2)
+        {
+            printf("\nOpcion incorrecta, vuelva a intentarlo.\n");
+            fflush(stdin);
+            scanf("%i",&opcion2);
+        }
+
+        //crearArregloGrupoPartidosManipulado(partidosGrupo, grupos, equipoElegido, opcion2)  ///OPCION ELEGIR RESULTADO (1= clasifica) (2= no clasifica)
+    }
     return 0;
 }
