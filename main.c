@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <time.h>
 #define VALIDOS_GRUPO 8
 
 ///ESTRUCTURAS
@@ -79,8 +80,10 @@ void mostrarGrupos(Grupo*, int);                                            ///M
 
 nodoPartido* crearNodoPartido(Partido);
 
+Equipo* getEquipo(nodoGrupoEquipo*, int);                                   /// devuelve un equipo de un grupo según su posición en el mismo
 
 ///IMPLEMENTACION DE FUNCIONES
+
 ///1-
 nodoEquipo* crearNodoEquipo(Equipo equipo)
 {
@@ -126,6 +129,7 @@ void leerArchivo(nodoEquipo** listaDeEquipos)
         fclose(fp);
     }
 }
+
 ///2-
 void inicializarGrupos(Grupo* grupos, int validosGrupo)
 {
@@ -219,6 +223,7 @@ void mostrarGrupos(Grupo* grupos, int validos)
         printf("----------------------------------------------------------------------------\n\n");
     }
 }
+
 ///3-
 ///4-
 nodoPartido* crearNodoPartido(Partido insertar)
@@ -230,17 +235,59 @@ nodoPartido* crearNodoPartido(Partido insertar)
     return nuevo;
 }
 
-Equipo* getEquipo(nodoGrupoEquipo *grupo, int indexEquipo) { // devuelve un equipo de un grupo según su posición en el mismo
-    for (int i = 0; i < indexEquipo; i++) 
+Equipo* getEquipo(nodoGrupoEquipo* grupo,int indexEquipo)
+{
+    for (int i = 0; i < indexEquipo; i++)
+    {
         grupo = grupo->siguiente;
+    }
+
     return grupo->equipo;
 }
 
-void agregarPartido(nodoPartido **lista, Equipo *eq1, Equipo *eq2) {
-    // hacer
+void agregarPartido(nodoPartido** lista, Equipo* eq1, Equipo* eq2)
+{
+    int probabilidadPrimero = (int)(*eq1).probabilidad * 1000;
+    int probabilidadSegundo = (int)(*eq2).probabilidad * 1000;
+    int probabilidadEmpate;
+    int probabilidadTotal;
+    int resultado;
+
+    if(probabilidadPrimero >= probabilidadSegundo)
+    {
+        if(probabilidadPrimero > probabilidadSegundo * 12)
+        {
+            probabilidadSegundo = probabilidadPrimero / 12;
+        }
+
+        probabilidadEmpate = probabilidadSegundo * 1.33;
+    }
+    else
+    {
+        if(probabilidadSegundo > probabilidadPrimero * 12)
+        {
+            probabilidadPrimero = probabilidadSegundo / 12;
+        }
+
+        probabilidadEmpate = probabilidadPrimero * 1.33;
+    }
+
+    probabilidadTotal = probabilidadEmpate + probabilidadPrimero + probabilidadSegundo;
+
+    sra
+    resultado = randint(probabilidadTotal);
+    printf("s");
+
 }
 
-void cargarPartidosGrupos(nodoPartido **lista, Grupo grupo) {
+void cargarPartidosGrupos(nodoPartido** lista, Grupo grupo)
+{
+    /*printf("%s vs %s\n", getEquipo(grupo.equipos, 0), getEquipo(grupo.equipos, 1));
+    printf("%s vs %s\n", getEquipo(grupo.equipos, 2), getEquipo(grupo.equipos, 3));
+    printf("%s vs %s\n", getEquipo(grupo.equipos, 0), getEquipo(grupo.equipos, 2));
+    printf("%s vs %s\n", getEquipo(grupo.equipos, 1), getEquipo(grupo.equipos, 3));
+    printf("%s vs %s\n", getEquipo(grupo.equipos, 0), getEquipo(grupo.equipos, 3));
+    printf("%s vs %s\n", getEquipo(grupo.equipos, 1), getEquipo(grupo.equipos, 2));*/
     agregarPartido(lista, getEquipo(grupo.equipos, 0), getEquipo(grupo.equipos, 1));
     agregarPartido(lista, getEquipo(grupo.equipos, 2), getEquipo(grupo.equipos, 3));
     agregarPartido(lista, getEquipo(grupo.equipos, 0), getEquipo(grupo.equipos, 2));
@@ -249,13 +296,16 @@ void cargarPartidosGrupos(nodoPartido **lista, Grupo grupo) {
     agregarPartido(lista, getEquipo(grupo.equipos, 1), getEquipo(grupo.equipos, 2));
 }
 
-void crearArregloGrupoPartidos(GrupoPartido partidosGrupo[VALIDOS_GRUPO], Grupo grupos[VALIDOS_GRUPO]) {
-    for (int i = 0; i < VALIDOS_GRUPO; i++) {
+void crearArregloGrupoPartidos(GrupoPartido partidosGrupo[VALIDOS_GRUPO], Grupo grupos[VALIDOS_GRUPO])
+{
+    for (int i = 0; i < VALIDOS_GRUPO; i++)
+    {
         partidosGrupo[i].letra = grupos[i].letra;
         partidosGrupo[i].partidos = NULL;
         cargarPartidosGrupos(&(partidosGrupo->partidos), grupos[i]);
     }
 }
+
 
 ///MAIN
 
@@ -270,7 +320,7 @@ int main()
     ///2-
     inicializarGrupos(grupos, VALIDOS_GRUPO);
     cargarGrupos(grupos, VALIDOS_GRUPO, listaDeEquipos);
-    // mostrarGrupos(grupos, VALIDOS_GRUPO);
+    ///mostrarGrupos(grupos, VALIDOS_GRUPO);
 
 
     ///3-
@@ -278,6 +328,6 @@ int main()
 
     GrupoPartido partidosGrupo[VALIDOS_GRUPO];
     crearArregloGrupoPartidos(partidosGrupo, grupos);
-    printf("%d", partidosGrupo[0].partidos->partido.fecha);
+
     return 0;
 }
