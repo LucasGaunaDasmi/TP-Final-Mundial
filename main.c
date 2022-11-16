@@ -1,3 +1,4 @@
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -80,7 +81,7 @@ void mostrarGrupos(Grupo*, int);                                            ///M
 
 nodoPartido* crearNodoPartido(Partido);
 
-Equipo* getEquipo(nodoGrupoEquipo*, int);                                   /// devuelve un equipo de un grupo según su posición en el mismo
+Equipo* getEquipo(nodoGrupoEquipo*, int);                                   /// devuelve un equipo de un grupo seg�n su posici�n en el mismo
 
 ///IMPLEMENTACION DE FUNCIONES
 
@@ -247,8 +248,8 @@ Equipo* getEquipo(nodoGrupoEquipo* grupo,int indexEquipo)
 
 void agregarPartido(nodoPartido** lista, Equipo* eq1, Equipo* eq2)
 {
-    int probabilidadPrimero = (int)(*eq1).probabilidad * 1000;
-    int probabilidadSegundo = (int)(*eq2).probabilidad * 1000;
+    int probabilidadPrimero = eq1->probabilidad * 1000;
+    int probabilidadSegundo = eq2->probabilidad * 1000;
     int probabilidadEmpate;
     int probabilidadTotal;
     int resultado;
@@ -272,15 +273,44 @@ void agregarPartido(nodoPartido** lista, Equipo* eq1, Equipo* eq2)
         probabilidadEmpate = probabilidadPrimero * 1.33;
     }
 
-    probabilidadTotal = probabilidadEmpate + probabilidadPrimero + probabilidadSegundo;
 
-    sra
-    resultado = randint(probabilidadTotal);
-    printf("s");
+    probabilidadTotal = probabilidadEmpate + probabilidadPrimero + probabilidadSegundo;
+//    printf("Probabiliad total = %i\n",probabilidadTotal);
+
+    resultado = rand() % (probabilidadTotal+1);
+
+    if (resultado <= probabilidadPrimero)   //gana el primero
+    {
+    //terminar
+
+
+
+
+    }
+    else
+    {
+        if (resultado > probabilidadPrimero && resultado <= probabilidadSegundo + probabilidadPrimero)      //gana el segundo
+        {
+                //terminar
+        }
+        if (resultado > probabilidadSegundo + probabilidadPrimero)      //empate
+        {
+                //terminar
+        }
+    }
+
+
 
 }
 
-void cargarPartidosGrupos(nodoPartido **lista, Grupo grupo) {
+void cargarPartidosGrupos(nodoPartido** lista, Grupo grupo)
+{
+    /*printf("%s vs %s\n", getEquipo(grupo.equipos, 0), getEquipo(grupo.equipos, 1));
+    printf("%s vs %s\n", getEquipo(grupo.equipos, 2), getEquipo(grupo.equipos, 3));
+    printf("%s vs %s\n", getEquipo(grupo.equipos, 0), getEquipo(grupo.equipos, 2));
+    printf("%s vs %s\n", getEquipo(grupo.equipos, 1), getEquipo(grupo.equipos, 3));
+    printf("%s vs %s\n", getEquipo(grupo.equipos, 0), getEquipo(grupo.equipos, 3));
+    printf("%s vs %s\n", getEquipo(grupo.equipos, 1), getEquipo(grupo.equipos, 2));*/
     agregarPartido(lista, getEquipo(grupo.equipos, 0), getEquipo(grupo.equipos, 1));
     agregarPartido(lista, getEquipo(grupo.equipos, 2), getEquipo(grupo.equipos, 3));
     agregarPartido(lista, getEquipo(grupo.equipos, 0), getEquipo(grupo.equipos, 2));
