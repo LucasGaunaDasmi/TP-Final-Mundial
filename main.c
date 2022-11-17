@@ -368,6 +368,50 @@ void crearArregloGrupoPartidosRandom(GrupoPartido partidosGrupo[VALIDOS_GRUPO], 
     }
 }
 
+void insertar_equipo_ordenado(nodoGrupoEquipo **list, Equipo *e) {
+    if (*list == NULL || (*list)->equipo->pts <= e->pts) {
+        if ((*list)->equipo->pts == e->pts) { // si empatan en puntos
+            if (((*list)->equipo->gf - (*list)->equipo->ga) <= (e->gf - e->ga)) {
+                if (((*list)->equipo->gf - (*list)->equipo->ga) == (e->gf - e->ga)) {
+                    if ((*list)->equipo->gf < e->gf) {
+                        nodoGrupoEquipo *aux = crearNodoGrupoEquipo(e);
+                        aux->siguiente = *list;
+                        *list = aux;
+                    } else insertar_equipo_ordenado(&(*list)->siguiente, e);
+                } else {
+                    nodoGrupoEquipo *aux = crearNodoGrupoEquipo(e);
+                    aux->siguiente = *list;
+                    *list = aux;
+                }
+            } else insertar_equipo_ordenado(&(*list)->siguiente, e);
+        } else {
+            nodoGrupoEquipo *aux = crearNodoGrupoEquipo(e);
+            aux->siguiente = *list;
+            *list = aux;
+        }
+    } else insertar_equipo_ordenado(&(*list)->siguiente, e);
+}
+
+void ordenar_grupo_por_puntos(nodoGrupoEquipo **list) {
+    nodoGrupoEquipo *aux = *list;
+    nodoGrupoEquipo *temp;
+    while (aux != NULL) { // copio la lista
+        temp = aux;
+        temp = temp->siguiente;
+        aux = aux->siguiente;
+    }
+    while (*list != NULL) {
+        aux = *list;
+        *list = (*list)->siguiente;
+        free(aux);
+    }
+    *list = NULL;
+    while (aux != NULL) {
+        insertar_equipo_ordenado(list, aux->equipo);
+        aux = aux->siguiente;
+    }
+}
+
 void crearArregloGrupoPartidosManipulado(GrupoPartido partidosGrupo[VALIDOS_GRUPO], Grupo grupos[VALIDOS_GRUPO], char* equipoElegido, int opcion)   ////////PSEUDOCODIGO----FALTA HACER
 {
     int flag;
@@ -460,8 +504,7 @@ int main()
             fflush(stdin);
             scanf("%i",&opcion2);
         }
-
-        //crearArregloGrupoPartidosManipulado(partidosGrupo, grupos, equipoElegido, opcion2)  ///OPCION ELEGIR RESULTADO (1= clasifica) (2= no clasifica)
+        crearArregloGrupoPartidosManipulado(partidosGrupo, grupos, equipoElegido, opcion2);  ///OPCION ELEGIR RESULTADO (1= clasifica) (2= no clasifica)
     }
     return 0;
 }
