@@ -500,11 +500,9 @@ void agregarPartido(nodoPartido** lista, Equipo* eq1, Equipo* eq2, char fechas[]
     int probabilidadEmpate;
     int probabilidadTotal;
     int resultado;
-    if (strcmp(eq1->nomEquipo, "Brasil") == 0) printf("======================== P Brasil = %d ============", probabilidadPrimero);
-    if (strcmp(eq2->nomEquipo, "Brasil") == 0) printf("======================== P Brasil = %d ============", probabilidadSegundo);
     if(probabilidadPrimero >= probabilidadSegundo)
     {
-        if(probabilidadPrimero > probabilidadSegundo * 12 && probabilidadSegundo != 0)
+        if(probabilidadPrimero > probabilidadSegundo * 12 && (probabilidadSegundo != 0) && probabilidadPrimero != 1000000)
         {
             probabilidadSegundo = probabilidadPrimero / 12;
         }
@@ -513,7 +511,7 @@ void agregarPartido(nodoPartido** lista, Equipo* eq1, Equipo* eq2, char fechas[]
     }
     else
     {
-        if(probabilidadSegundo > probabilidadPrimero * 12 && probabilidadPrimero != 0)
+        if(probabilidadSegundo > probabilidadPrimero * 12 && (probabilidadPrimero != 0) && probabilidadSegundo != 1000000)
         {
             probabilidadPrimero = probabilidadSegundo / 12;
         }
@@ -523,7 +521,8 @@ void agregarPartido(nodoPartido** lista, Equipo* eq1, Equipo* eq2, char fechas[]
 
     probabilidadTotal = probabilidadEmpate + probabilidadPrimero + probabilidadSegundo;
     ///printf("Probabiliad total = %i\n",probabilidadTotal);
-
+    printf("======================== P %s = %d ============\n", eq1->nomEquipo, probabilidadPrimero);
+    printf("======================== P %s = %d ============\n", eq2->nomEquipo, probabilidadSegundo);
     resultado = rand()%(probabilidadTotal+1);
 
     if (resultado <= probabilidadPrimero)   //gana el primero
@@ -696,7 +695,7 @@ int main()
     srand(time(NULL));
     printf("SIMULADOR DEL MUNDIAL QATAR 2022:\n\n");
     int opcion;
-    int opcion2; bool opc2;
+    int opcion2; bool opc2 = true;
     int flag;
     char equipoElegido[20];
     Grupo grupos[VALIDOS_GRUPO];
@@ -761,11 +760,10 @@ int main()
         {
             printf("\nOpcion incorrecta, vuelva a intentarlo.\n");
             fflush(stdin);
-            if (opcion2 == 1) opc2 = true; // true
-            if (opcion2 == 2) opc2 = false; // false
-            scanf("%i",&opcion2);
+            scanf("%i", &opcion2);
         }
-
+        if (opcion2 == 1) opc2 = true; // true
+        if (opcion2 == 2) opc2 = false; // false
         system("cls");
         crearArregloGrupoPartidosManipulado(partidosGrupo, grupos, equipoElegido, opc2, fechas);  ///OPCION ELEGIR RESULTADO (1= clasifica) (2= no clasifica)
         ///mostrarResultadosPartidosGrupos(partidosGrupo);
