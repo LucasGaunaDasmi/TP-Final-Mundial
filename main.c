@@ -90,8 +90,8 @@ void mostrarGrupos(Grupo*, int);                                                
 int existeEquipo(char*, nodoEquipo*);                                                             ///VERIFICA SI UN EQUIPO(STRING) ESTA EN LA LISTA DE EQUIPOS
 
 nodoPartido* crearNodoPartido(Partido);                                                           ///CREA UN NODO CON UNA ESTRUCTURA PARTIDO Y PUNTERO AL SIGUIENTE
- 
-void insertarAlFinalNodoPartido(nodoPartido**,Partido); ///REUTILIZAR EN OCTAVOS                  ///RECIBE UN PARTIDO, LO PONE EN UN NODO E INSERTA EL NODO EN LA LISTA 
+
+void insertarAlFinalNodoPartido(nodoPartido**,Partido); ///REUTILIZAR EN OCTAVOS                  ///RECIBE UN PARTIDO, LO PONE EN UN NODO E INSERTA EL NODO EN LA LISTA
 
 Equipo* getEquipo(nodoGrupoEquipo*,int);                                                          ///DEVUELVE UN EQUIPO DE UN GRUPO SEGUN SU POSICION EN LA SUBLISTA
 
@@ -101,7 +101,7 @@ void resultadoDelEmpate(int*, int*);                                            
 
 void agregarPartido(nodoPartido**, Equipo*, Equipo*,char[][30]);  ///REUTILIZAR EN OCTAVOS        ///DECIDE LOS RESULTADOS DEL PARTIDO, LOS GUARDA EN UNA ESTRUCTURA PARTIDO Y SE LO PASA A INSERTAR_AL_FINAL_NODO_PARTIDO
 
-void cargarPartidosGrupos(nodoPartido**, Grupo, char[][30]);                                      ///REALIZA LOS ENFRENTAMIENTOS DE UN DETERMINADO GRUPO 
+void cargarPartidosGrupos(nodoPartido**, Grupo, char[][30]);                                      ///REALIZA LOS ENFRENTAMIENTOS DE UN DETERMINADO GRUPO
 
 bool comparar_puntos(Equipo*, Equipo*);                                                           ///COMPARA LOS PUNTOS Y GOLES DE 2 EQUIPOS, TRUE = TIENE MAS PUNTOS EL SEGUNDO, FALSE = TIENE MAS PUNTOS EL PRIMERO
 
@@ -692,6 +692,8 @@ void crearArregloGrupoPartidosManipulado(GrupoPartido partidosGrupo[VALIDOS_GRUP
         }
         else
         {
+            partidosGrupo[i].letra = grupos[i].letra;
+            partidosGrupo[i].partidos = NULL;
             ///printf("Esta en el grupo %c",grupos[i].letra);
             float probabilidad = grupos[i].equipos->equipo->probabilidad; // guardo la probabilidad
             Equipo *e = get_equipo_por_nombre(grupos[i].equipos, equipoElegido); // busco el equipo
