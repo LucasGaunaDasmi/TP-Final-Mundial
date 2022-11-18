@@ -65,7 +65,7 @@ typedef struct GrupoPartido
 
 ///1-
 
-leerFechas(char[63][30]);                                                                 ///LEE EL ARCHIVO CON LAS FECHAS (NO ESTA ORDENADAS CRONOLOGICAMENTE 100%, PREGUNTENME EL ORDEN)
+void leerFechas(char[63][30]);                                                            ///LEE EL ARCHIVO CON LAS FECHAS (NO ESTA ORDENADAS CRONOLOGICAMENTE 100%, PREGUNTENME EL ORDEN)
 
 nodoEquipo* crearNodoEquipo(Equipo equipo);                                               ///CREA UN NODO EQUIPO (PARA LA LISTA DE EQUIPOS GENERAL)
 
@@ -94,7 +94,7 @@ nodoPartido* crearNodoPartido(Partido);                                         
 
 void insertarAlFinalNodoPartido(nodoPartido**,Partido);
 
-Equipo* getEquipo(nodoGrupoEquipo*,int*);                                                 ///DEVUELVE UN EQUIPO DE UN GRUPO SEGUN SU POSICION EN LA SUBLISTA
+Equipo* getEquipo(nodoGrupoEquipo*,int);                                                 ///DEVUELVE UN EQUIPO DE UN GRUPO SEGUN SU POSICION EN LA SUBLISTA
 
 void definirGolesVictoria(int*, int, int*, int);                                           ///EN CASO DE VICTORIA, ESTA FUNCION ELIGE UN RESULTADO CONSIDERANDO EL DESEMPEÑO DE LOS EQUIPOS
 
@@ -106,14 +106,14 @@ void cargarPartidosGrupos(nodoPartido**, Grupo, char[][30]);
 
 void crearArregloGrupoPartidosRandom(GrupoPartido*, Grupo*,char[][30]);
 
-void crearArregloGrupoPartidosManipulado(GrupoPartido*, Grupo*, char*, int, char[][30]);
+void crearArregloGrupoPartidosManipulado(GrupoPartido*, Grupo*, char*, bool, char[][30]);
 
 
 ///IMPLEMENTACION DE FUNCIONES
 
 ///1-
 
-leerFechas(char fechas[63][30])
+void leerFechas(char fechas[63][30])
 {
     char unaFecha[30];
     FILE* fp = fopen("fechas.bin","rb");
@@ -244,7 +244,6 @@ void mostrarGrupos(Grupo* grupos, int validos)
         printf("\t\tMP\tW\tD\tL\tGF\tGA\tGD\tPts\n");
 
         nodoGrupoEquipo* seg = grupos[i].equipos;
-        ordenar_grupo_por_puntos(&seg);
 
         while(seg != NULL)
         {
@@ -322,7 +321,7 @@ void insertarAlFinalNodoPartido(nodoPartido** lista,Partido aInsertar)
     }
 }
 
-Equipo* getEquipo(nodoGrupoEquipo* grupo, int* indexEquipo)
+Equipo* getEquipo(nodoGrupoEquipo* grupo, int indexEquipo)
 {
     for (int i = 0; i < indexEquipo; i++)
     {
@@ -501,10 +500,11 @@ void agregarPartido(nodoPartido** lista, Equipo* eq1, Equipo* eq2, char fechas[]
     int probabilidadEmpate;
     int probabilidadTotal;
     int resultado;
-
+    if (strcmp(eq1->nomEquipo, "Brasil") == 0) printf("======================== P Brasil = %d ============", probabilidadPrimero);
+    if (strcmp(eq2->nomEquipo, "Brasil") == 0) printf("======================== P Brasil = %d ============", probabilidadSegundo);
     if(probabilidadPrimero >= probabilidadSegundo)
     {
-        if(probabilidadPrimero > probabilidadSegundo * 12)
+        if(probabilidadPrimero > probabilidadSegundo * 12 && probabilidadSegundo != 0)
         {
             probabilidadSegundo = probabilidadPrimero / 12;
         }
@@ -513,7 +513,7 @@ void agregarPartido(nodoPartido** lista, Equipo* eq1, Equipo* eq2, char fechas[]
     }
     else
     {
-        if(probabilidadSegundo > probabilidadPrimero * 12)
+        if(probabilidadSegundo > probabilidadPrimero * 12 && probabilidadPrimero != 0)
         {
             probabilidadPrimero = probabilidadSegundo / 12;
         }
@@ -603,16 +603,6 @@ void cargarPartidosGrupos(nodoPartido** lista, Grupo grupo, char fechas[63][30])
     agregarPartido(lista, getEquipo(grupo.equipos, 3), getEquipo(grupo.equipos, 0), fechas);
 }
 
-void crearArregloGrupoPartidosRandom(GrupoPartido* partidosGrupo, Grupo* grupos,char fechas[][30])
-{
-    for (int i = 0; i < VALIDOS_GRUPO; i++)
-    {
-        partidosGrupo[i].letra = grupos[i].letra;
-        partidosGrupo[i].partidos = NULL;
-        cargarPartidosGrupos(&(partidosGrupo->partidos), grupos[i], fechas);
-    }
-}
-
 bool comparar_puntos(Equipo *a, Equipo *b)
 { // devuelve true si b tiene mas puntos que a
     if (a->pts < b->pts) return true;
@@ -655,9 +645,26 @@ bool clasifica(nodoGrupoEquipo *list, char *equipo)
     return false;
 }
 
-void crearArregloGrupoPartidosManipulado(GrupoPartido partidosGrupo[VALIDOS_GRUPO], Grupo grupos[VALIDOS_GRUPO], char* equipoElegido, int opcion, char fechas[][30])   ////////PSEUDOCODIGO----FALTA HACER
+void crearArregloGrupoPartidosRandom(GrupoPartido* partidosGrupo, Grupo* grupos,char fechas[][30])
 {
-    int flag;
+    for (int i = 0; i < VALIDOS_GRUPO; i++)
+    {
+        partidosGrupo[i].letra = grupos[i].letra;
+        partidosGrupo[i].partidos = NULL;
+        cargarPartidosGrupos(&(partidosGrupo->partidos), grupos[i], fechas);
+        ordenar_grupo_por_puntos(&grupos[i].equipos);
+    }
+}
+
+Equipo* get_equipo_por_nombre(nodoGrupoEquipo *list, char *equipo)
+{
+    if (strcmp(list->equipo->nomEquipo, equipo) == 0) return list->equipo;
+    return get_equipo_por_nombre(list->siguiente, equipo);
+}
+
+void crearArregloGrupoPartidosManipulado(GrupoPartido partidosGrupo[VALIDOS_GRUPO], Grupo grupos[VALIDOS_GRUPO], char* equipoElegido, bool opcion, char fechas[][30])   ////////PSEUDOCODIGO----FALTA HACER
+{
+    bool flag;
 
     for (int i = 0; i < VALIDOS_GRUPO; i++)
     {
@@ -666,34 +673,21 @@ void crearArregloGrupoPartidosManipulado(GrupoPartido partidosGrupo[VALIDOS_GRUP
             partidosGrupo[i].letra = grupos[i].letra;
             partidosGrupo[i].partidos = NULL;
             cargarPartidosGrupos(&(partidosGrupo->partidos), grupos[i], fechas);
+            ordenar_grupo_por_puntos(&grupos[i].equipos);
         }
         else
         {
             printf("Esta en el grupo %c",grupos[i].letra);
-            if(opcion == 1)
-            {
-                do
-                {
-                    cargarPartidosGrupos(&(partidosGrupo->partidos), grupos[i], fechas);
-                    nodoGrupoEquipo* seg = grupos[i].equipos;
-                    ordenar_grupo_por_puntos(&seg);
-                    flag = (!clasifica(seg, equipoElegido));  ///   0 = NO         1 = SI
-                }while(flag == 0);
-            }
-            if(opcion == 2)
-            {
-                do
-                {
-                    cargarPartidosGrupos(&(partidosGrupo->partidos), grupos[i], fechas);
-                    nodoGrupoEquipo* seg = grupos[i].equipos;
-                    ordenar_grupo_por_puntos(&seg);
-                    flag = (!clasifica(seg, equipoElegido));  ///   0 = NO         1 = SI
-                }while(flag == 1);
-            }
+            float probabilidad = grupos[i].equipos->equipo->probabilidad; // guardo la probabilidad
+            Equipo *e = get_equipo_por_nombre(grupos[i].equipos, equipoElegido); // busco el equipo
+            if (opcion == true) e->probabilidad = 1000; // modifico la probabilidad segun la opcion
+            if (opcion == false) e->probabilidad = 0;
+            cargarPartidosGrupos(&(partidosGrupo->partidos), grupos[i], fechas); // cargo los equipos con la probabilidad modificada
+            e->probabilidad = probabilidad; // vuelvo a poner la probabilidad original
+            ordenar_grupo_por_puntos(&grupos[i].equipos);
         }
     }
 }
-
 
 ///MAIN
 
@@ -702,7 +696,7 @@ int main()
     srand(time(NULL));
     printf("SIMULADOR DEL MUNDIAL QATAR 2022:\n\n");
     int opcion;
-    int opcion2;
+    int opcion2; bool opc2;
     int flag;
     char equipoElegido[20];
     Grupo grupos[VALIDOS_GRUPO];
@@ -767,11 +761,13 @@ int main()
         {
             printf("\nOpcion incorrecta, vuelva a intentarlo.\n");
             fflush(stdin);
+            if (opcion2 == 1) opc2 = true; // true
+            if (opcion2 == 2) opc2 = false; // false
             scanf("%i",&opcion2);
         }
 
         system("cls");
-        crearArregloGrupoPartidosManipulado(partidosGrupo, grupos, equipoElegido, opcion2, fechas);  ///OPCION ELEGIR RESULTADO (1= clasifica) (2= no clasifica)
+        crearArregloGrupoPartidosManipulado(partidosGrupo, grupos, equipoElegido, opc2, fechas);  ///OPCION ELEGIR RESULTADO (1= clasifica) (2= no clasifica)
         ///mostrarResultadosPartidosGrupos(partidosGrupo);
         mostrarGrupos(grupos, VALIDOS_GRUPO);
     }
