@@ -520,12 +520,12 @@ void agregarPartido(nodoPartido** lista, Equipo* eq1, Equipo* eq2, char fechas[]
     }
 
     probabilidadTotal = probabilidadEmpate + probabilidadPrimero + probabilidadSegundo;
-    ///printf("Probabiliad total = %i\n",probabilidadTotal);
-    printf("======================== P %s = %d ============\n", eq1->nomEquipo, probabilidadPrimero);
-    printf("======================== P %s = %d ============\n", eq2->nomEquipo, probabilidadSegundo);
+
     resultado = rand()%(probabilidadTotal+1);
 
-    if (resultado <= probabilidadPrimero)   //gana el primero
+    printf("======================== P %s = %d ============\n", eq1->nomEquipo, probabilidadPrimero);
+    printf("======================== P %s = %d ============\n", eq2->nomEquipo, probabilidadSegundo);
+    if (resultado < probabilidadPrimero)   //gana el primero
     {
         do
         {
@@ -545,7 +545,7 @@ void agregarPartido(nodoPartido** lista, Equipo* eq1, Equipo* eq2, char fechas[]
         eq2->loss = eq2->loss + 1;
     }
 
-    if ((resultado > probabilidadPrimero) && (resultado <= probabilidadSegundo + probabilidadPrimero))      //gana el segundo
+    if ((resultado >= probabilidadPrimero) && (resultado < probabilidadSegundo + probabilidadPrimero))      //gana el segundo
     {
         do
         {
@@ -565,7 +565,7 @@ void agregarPartido(nodoPartido** lista, Equipo* eq1, Equipo* eq2, char fechas[]
         eq1->loss = eq1->loss + 1;
     }
 
-    if (resultado > (probabilidadSegundo + probabilidadPrimero))      //empate
+    if (resultado >= (probabilidadSegundo + probabilidadPrimero))      //empate
     {
         resultadoDelEmpate(&(aInsertar.golesEq1),&(aInsertar.golesEq2));
 
@@ -588,6 +588,7 @@ void agregarPartido(nodoPartido** lista, Equipo* eq1, Equipo* eq2, char fechas[]
 
 void cargarPartidosGrupos(nodoPartido** lista, Grupo grupo, char fechas[63][30])
 {
+    printf("\nResultados grupo %c:\n\n",grupo.letra);
     /*printf("%s vs %s\n", getEquipo(grupo.equipos, 0), getEquipo(grupo.equipos, 1));
     printf("%s vs %s\n", getEquipo(grupo.equipos, 2), getEquipo(grupo.equipos, 3));
     printf("%s vs %s\n", getEquipo(grupo.equipos, 0), getEquipo(grupo.equipos, 2));
@@ -634,13 +635,13 @@ void ordenar_grupo_por_puntos(nodoGrupoEquipo **list)
 bool is_in_grupo(nodoGrupoEquipo *list, char *equipo)
 {
     if (list == NULL) return false;
-    if (strcmp(equipo, list->equipo->nomEquipo) == 0) return true;
+    if (strcmpi(equipo, list->equipo->nomEquipo) == 0) return true;
     return is_in_grupo(list->siguiente, equipo);
 }
 
 bool clasifica(nodoGrupoEquipo *list, char *equipo)
 {
-    if (strcmp(list->equipo->nomEquipo, equipo) == 0 || strcmp(list->siguiente->equipo->nomEquipo, equipo) == 0) return true;
+    if (strcmpi(list->equipo->nomEquipo, equipo) == 0 || strcmpi(list->siguiente->equipo->nomEquipo, equipo) == 0) return true;
     return false;
 }
 
@@ -657,7 +658,7 @@ void crearArregloGrupoPartidosRandom(GrupoPartido* partidosGrupo, Grupo* grupos,
 
 Equipo* get_equipo_por_nombre(nodoGrupoEquipo *list, char *equipo)
 {
-    if (strcmp(list->equipo->nomEquipo, equipo) == 0) return list->equipo;
+    if (strcmpi(list->equipo->nomEquipo, equipo) == 0) return list->equipo;
     return get_equipo_por_nombre(list->siguiente, equipo);
 }
 
@@ -676,7 +677,7 @@ void crearArregloGrupoPartidosManipulado(GrupoPartido partidosGrupo[VALIDOS_GRUP
         }
         else
         {
-            printf("Esta en el grupo %c",grupos[i].letra);
+            ///printf("Esta en el grupo %c",grupos[i].letra);
             float probabilidad = grupos[i].equipos->equipo->probabilidad; // guardo la probabilidad
             Equipo *e = get_equipo_por_nombre(grupos[i].equipos, equipoElegido); // busco el equipo
             if (opcion == true) e->probabilidad = 1000; // modifico la probabilidad segun la opcion
@@ -686,6 +687,12 @@ void crearArregloGrupoPartidosManipulado(GrupoPartido partidosGrupo[VALIDOS_GRUP
             ordenar_grupo_por_puntos(&grupos[i].equipos);
         }
     }
+}
+
+void print_partido(Partido *p)
+{
+    printf("%s",p->fecha);
+    printf("%s %d - %d %s", p->equipo1->nomEquipo, p->golesEq1, p->golesEq2, p->equipo2->nomEquipo);
 }
 
 ///MAIN
@@ -732,7 +739,7 @@ int main()
         system("cls");
         crearArregloGrupoPartidosRandom(partidosGrupo, grupos, fechas);
         ///mostrarResultadosPartidosGrupos(partidosGrupo);
-        printf("POSICIONES FINALES:\n");
+        printf("\nPOSICIONES FINALES:\n");
         mostrarGrupos(grupos, VALIDOS_GRUPO);
         break;
 
@@ -766,8 +773,10 @@ int main()
         if (opcion2 == 2) opc2 = false; // false
         system("cls");
         crearArregloGrupoPartidosManipulado(partidosGrupo, grupos, equipoElegido, opc2, fechas);  ///OPCION ELEGIR RESULTADO (1= clasifica) (2= no clasifica)
-        ///mostrarResultadosPartidosGrupos(partidosGrupo);
         mostrarGrupos(grupos, VALIDOS_GRUPO);
+        break;
     }
+    ///5-
+
     return 0;
 }
