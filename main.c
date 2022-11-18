@@ -2,6 +2,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <stdbool.h>
 #include <time.h>
 #define VALIDOS_GRUPO 8
 
@@ -228,7 +229,7 @@ void mostrarGrupos(Grupo* grupos, int validos)
         printf("\t\tMP\tW\tD\tL\tGF\tGA\tGD\tPts\n");
 
         nodoGrupoEquipo* seg = grupos[i].equipos;
-
+        ordenar_grupo_por_puntos(&seg);
         while(seg != NULL)
         {
             printf("%s\t",seg->equipo->nomEquipo);
@@ -584,48 +585,42 @@ void crearArregloGrupoPartidosRandom(GrupoPartido* partidosGrupo, Grupo* grupos)
     }
 }
 
+bool comparar_puntos(Equipo *a, Equipo *b) { // devuelve true si b tiene mas puntos que a
+    if (a->pts < b->pts) return true;
+    if (a->pts > b->pts) return false;
+    if ((a->gf - a->ga) < (b->gf - b->ga)) return true;
+    if ((a->gf - a->ga) > (b->gf - b->ga)) return false;
+    if (a->gf < b->gf) return true;
+    if (a->gf > b->gf) return false;
+}
+
 void insertar_equipo_ordenado(nodoGrupoEquipo **list, Equipo *e) {
-    if (*list == NULL || (*list)->equipo->pts <= e->pts) {
-        if ((*list)->equipo->pts == e->pts) { // si empatan en puntos
-            if (((*list)->equipo->gf - (*list)->equipo->ga) <= (e->gf - e->ga)) {
-                if (((*list)->equipo->gf - (*list)->equipo->ga) == (e->gf - e->ga)) {
-                    if ((*list)->equipo->gf < e->gf) {
-                        nodoGrupoEquipo *aux = crearNodoGrupoEquipo(e);
-                        aux->siguiente = *list;
-                        *list = aux;
-                    } else insertar_equipo_ordenado(&(*list)->siguiente, e);
-                } else {
-                    nodoGrupoEquipo *aux = crearNodoGrupoEquipo(e);
-                    aux->siguiente = *list;
-                    *list = aux;
-                }
-            } else insertar_equipo_ordenado(&(*list)->siguiente, e);
-        } else {
-            nodoGrupoEquipo *aux = crearNodoGrupoEquipo(e);
-            aux->siguiente = *list;
-            *list = aux;
-        }
+    if (*list == NULL || comparar_puntos((*list)->equipo, e)) {
+        nodoGrupoEquipo *aux = crearNodoGrupoEquipo(e);
+        aux->siguiente = *list;
+        *list = aux;
     } else insertar_equipo_ordenado(&(*list)->siguiente, e);
 }
 
 void ordenar_grupo_por_puntos(nodoGrupoEquipo **list) {
-    nodoGrupoEquipo *aux = *list;
-    nodoGrupoEquipo *temp;
-    while (aux != NULL) { // copio la lista
-        temp = aux;
-        temp = temp->siguiente;
-        aux = aux->siguiente;
-    }
-    while (*list != NULL) {
-        aux = *list;
-        *list = (*list)->siguiente;
-        free(aux);
-    }
+    nodoGrupoEquipo *aux;
+    nodoGrupoEquipo *temp = *list;
     *list = NULL;
-    while (aux != NULL) {
-        insertar_equipo_ordenado(list, aux->equipo);
-        aux = aux->siguiente;
+    while (temp != NULL) {
+        insertar_equipo_ordenado(list, temp->equipo);
+        temp = temp->siguiente;
     }
+}
+
+bool is_in_grupo(nodoGrupoEquipo *list, char *equipo) {
+    if (list == NULL) return false;
+    if (strcmp(equipo, list->equipo->nomEquipo) == 0) return true;
+    return is_in_grupo(list->siguiente, equipo);
+}
+
+bool clasifica(nodoGrupoEquipo *list, char *equipo) {
+    if (strcmp(list->equipo->nomEquipo, equipo) == 0 || strcmp(list->siguiente->equipo->nomEquipo, equipo) == 0) return true;
+    return false;
 }
 
 void crearArregloGrupoPartidosManipulado(GrupoPartido partidosGrupo[VALIDOS_GRUPO], Grupo grupos[VALIDOS_GRUPO], char* equipoElegido, int opcion)   ////////PSEUDOCODIGO----FALTA HACER
@@ -634,7 +629,7 @@ void crearArregloGrupoPartidosManipulado(GrupoPartido partidosGrupo[VALIDOS_GRUP
 
     for (int i = 0; i < VALIDOS_GRUPO; i++)
     {
-        if('EL EQUIPO DESEADO NO ESTA EN ESTE GRUPO')       /// HACEMOS RANDOM NORMAL
+        if(!is_in_grupo(grupos[i].equipos, equipoElegido))       /// HACEMOS RANDOM NORMAL
         {
             partidosGrupo[i].letra = grupos[i].letra;
             partidosGrupo[i].partidos = NULL;
@@ -645,7 +640,7 @@ void crearArregloGrupoPartidosManipulado(GrupoPartido partidosGrupo[VALIDOS_GRUP
             do
             {
                 cargarPartidosGrupos(&(partidosGrupo->partidos), grupos[i]);
-                flag = ('ES EL RESULTADO DESEADO?');  ///   0 = NO         1 = SI
+                flag = (!clasifica(grupos[i].equipos, equipoElegido));  ///   0 = NO         1 = SI
             }while(flag == 0);
         }
     }
@@ -670,7 +665,7 @@ int main()
     ///2-
     inicializarGrupos(grupos, VALIDOS_GRUPO);
     cargarGrupos(grupos, VALIDOS_GRUPO, listaDeEquipos);
-    mostrarGrupos(grupos, VALIDOS_GRUPO);
+    // mostrarGrupos(grupos, VALIDOS_GRUPO);
 
     ///3-
     ///4-
@@ -721,7 +716,7 @@ int main()
             fflush(stdin);
             scanf("%i",&opcion2);
         }
-        crearArregloGrupoPartidosManipulado(partidosGrupo, grupos, equipoElegido, opcion2);  ///OPCION ELEGIR RESULTADO (1= clasifica) (2= no clasifica)
+        // crearArregloGrupoPartidosManipulado(partidosGrupo, grupos, equipoElegido, opcion2);  ///OPCION ELEGIR RESULTADO (1= clasifica) (2= no clasifica)
     }
     return 0;
 }
