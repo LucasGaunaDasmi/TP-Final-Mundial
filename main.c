@@ -1,9 +1,8 @@
-
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <stdbool.h>
 #include <time.h>
+#include <stdbool.h>
 #define VALIDOS_GRUPO 8
 
 ///ESTRUCTURAS
@@ -40,7 +39,7 @@ typedef struct nodoGrupoEquipo
 
 typedef struct Partido
 {
-    int fecha; ///eligen ustedes el criterio
+    char fecha[30];
     Equipo* equipo1;
     Equipo* equipo2;
     int golesEq1;
@@ -65,6 +64,8 @@ typedef struct GrupoPartido
 ///PROTOTIPADO DE FUNCIONES
 
 ///1-
+
+leerFechas(char[63][30]);                                                                 ///LEE EL ARCHIVO CON LAS FECHAS (NO ESTA ORDENADAS CRONOLOGICAMENTE 100%, PREGUNTENME EL ORDEN)
 
 nodoEquipo* crearNodoEquipo(Equipo equipo);                                               ///CREA UN NODO EQUIPO (PARA LA LISTA DE EQUIPOS GENERAL)
 
@@ -99,18 +100,32 @@ void definirGolesVictoria(int*, int, int*, int);                                
 
 void resultadoDelEmpate(int*, int*);                                                      ///EN CASO DE EMPATE, ESTA FUNCION ELIGE UN RESULTADO
 
-void agregarPartido(nodoPartido**, Equipo*, Equipo*);
+void agregarPartido(nodoPartido**, Equipo*, Equipo*,char[][30]);
 
-void cargarPartidosGrupos(nodoPartido**, Grupo);
+void cargarPartidosGrupos(nodoPartido**, Grupo, char[][30]);
 
-void crearArregloGrupoPartidosRandom(GrupoPartido*, Grupo*);
+void crearArregloGrupoPartidosRandom(GrupoPartido*, Grupo*,char[][30]);
 
-void crearArregloGrupoPartidosManipulado(GrupoPartido*, Grupo*, char*, int);
+void crearArregloGrupoPartidosManipulado(GrupoPartido*, Grupo*, char*, int, char[][30]);
 
 
 ///IMPLEMENTACION DE FUNCIONES
 
 ///1-
+
+leerFechas(char fechas[63][30])
+{
+    char unaFecha[30];
+    FILE* fp = fopen("fechas.bin","rb");
+    if(fp)
+    {
+        for(int i = 0; i <63; i++)
+        {
+            fread((&unaFecha),sizeof(char[30]),1,fp);
+            strcpy(fechas[i],unaFecha);
+        }
+    }
+}
 
 nodoEquipo* crearNodoEquipo(Equipo equipo)
 {
@@ -230,6 +245,7 @@ void mostrarGrupos(Grupo* grupos, int validos)
 
         nodoGrupoEquipo* seg = grupos[i].equipos;
         ordenar_grupo_por_puntos(&seg);
+
         while(seg != NULL)
         {
             printf("%s\t",seg->equipo->nomEquipo);
@@ -249,7 +265,6 @@ void mostrarGrupos(Grupo* grupos, int validos)
             printf("%i\n", seg->equipo->pts);                                                 ///PUNTOS
             seg = seg->siguiente;
         }
-
         printf("----------------------------------------------------------------------------\n\n");
     }
 }
@@ -324,117 +339,117 @@ void definirGolesVictoria(int* golesGanador, int probabilidadGanador, int* goles
     if(probabilidadGanador <= 10)
     {
         numeroRandom = rand()%101;
-        if(numeroRandom <= 65)
+        if(numeroRandom <= 55)
         {
-            *golesGanador = 1;
+            (*golesGanador) = 1;
         }
-        if(65 < numeroRandom && numeroRandom <= 85)
+        if(55 < numeroRandom && numeroRandom <= 80)
         {
-            *golesGanador = 2;
+            (*golesGanador) = 2;
         }
-        if(85 < numeroRandom)
+        if(80 < numeroRandom)
         {
-            *golesGanador = 3;
+            (*golesGanador) = 3;
         }
 
         numeroRandom = rand()%101;
-        if(numeroRandom <= 75)
+        if(numeroRandom <= 68)
         {
-            *golesPerdedor = 0;
+            (*golesPerdedor) = 0;
         }
-        if(75 < numeroRandom && numeroRandom <= 95)
+        if(68 < numeroRandom && numeroRandom <= 88)
         {
-            *golesPerdedor = 1;
+            (*golesPerdedor) = 1;
         }
-        if(95 < numeroRandom)
+        if(88 < numeroRandom)
         {
-            *golesPerdedor = 3;
+            (*golesPerdedor) = 2;
         }
     }
 
     if(10 < probabilidadGanador && probabilidadGanador <= 60)
     {
         numeroRandom = rand()%101;
-        if(numeroRandom <= 40)
+        if(numeroRandom <= 35)
         {
-            *golesGanador = 1;
+            (*golesGanador) = 1;
         }
-        if(40 < numeroRandom && numeroRandom <= 85)
+        if(35 < numeroRandom && numeroRandom <= 80)
         {
-            *golesGanador = 2;
+            (*golesGanador) = 2;
         }
-        if(85 < numeroRandom && numeroRandom <= 92)
+        if(80 < numeroRandom && numeroRandom <= 90)
         {
-            *golesGanador = 3;
+            (*golesGanador) = 3;
         }
-        if(92 < numeroRandom && numeroRandom <= 97)
+        if(90 < numeroRandom && numeroRandom <= 97)
         {
-            *golesGanador = 4;
+            (*golesGanador) = 4;
         }
         if(97 < numeroRandom)
         {
-            *golesGanador = 5;
+            (*golesGanador) = 5;
         }
 
         numeroRandom = rand()%101;
         if(numeroRandom <= 30)
         {
-            *golesPerdedor = 0;
+            (*golesPerdedor) = 0;
         }
         if(30 < numeroRandom && numeroRandom <= 60)
         {
-            *golesPerdedor = 1;
+            (*golesPerdedor) = 1;
         }
         if(60 < numeroRandom && numeroRandom <= 90)
         {
-            *golesPerdedor = 2;
+            (*golesPerdedor) = 2;
         }
         if(90 < numeroRandom)
         {
-            *golesPerdedor = 3;
+            (*golesPerdedor) = 3;
         }
     }
 
     if(probabilidadGanador > 60)
     {
         numeroRandom = rand()%101;
-        if(numeroRandom <= 40)
+        if(numeroRandom <= 30)
         {
-            *golesGanador = 1;
+            (*golesGanador) = 1;
         }
-        if(40 < numeroRandom && numeroRandom <= 70)
+        if(30 < numeroRandom && numeroRandom <= 65)
         {
-            *golesGanador = 2;
+            (*golesGanador) = 2;
         }
-        if(70 < numeroRandom && numeroRandom <= 90)
+        if(65 < numeroRandom && numeroRandom <= 80)
         {
-            *golesGanador = 3;
+            (*golesGanador) = 3;
         }
-        if(85 < numeroRandom && numeroRandom <= 95)
+        if(80 < numeroRandom && numeroRandom <= 95)
         {
-            *golesGanador = 4;
+            (*golesGanador) = 4;
         }
         if(95 < numeroRandom)
         {
-            *golesGanador = 5;
+            (*golesGanador) = 5;
         }
 
         numeroRandom = rand()%101;
         if(numeroRandom <= 30)
         {
-            *golesPerdedor = 0;
+            (*golesPerdedor) = 0;
         }
         if(30 < numeroRandom && numeroRandom <= 60)
         {
-            *golesPerdedor = 1;
+            (*golesPerdedor) = 1;
         }
         if(60 < numeroRandom && numeroRandom <= 90)
         {
-            *golesPerdedor = 2;
+            (*golesPerdedor) = 2;
         }
         if(90 < numeroRandom)
         {
-            *golesPerdedor = 3;
+            (*golesPerdedor) = 3;
         }
     }
 }
@@ -446,31 +461,40 @@ void resultadoDelEmpate(int* goles1, int* goles2)
 
     if(numeroRandom <= 30)
     {
-         *goles1 = 0;
-         *goles2 = 0;
+         (*goles1) = 0;
+         (*goles2) = 0;
     }
     if(30 < numeroRandom && numeroRandom <= 70)
     {
-        *goles1 = 1;
-        *goles2 = 1;
+        (*goles1) = 1;
+        (*goles2) = 1;
     }
     if(70 < numeroRandom && numeroRandom <= 95)
     {
-        *goles1 = 2;
-        *goles2 = 2;
+        (*goles1) = 2;
+        (*goles2) = 2;
     }
     if(95 < numeroRandom)
     {
-        *goles1 = 3;
-        *goles2 = 3;
+        (*goles1) = 3;
+        (*goles2) = 3;
     }
 }
 
-void agregarPartido(nodoPartido** lista, Equipo* eq1, Equipo* eq2)                                                                                  ///FALTA AGREGAR aInsertar.fecha
+void agregarPartido(nodoPartido** lista, Equipo* eq1, Equipo* eq2, char fechas[][30])                                                                                  ///FALTA AGREGAR aInsertar.fecha
 {
     Partido aInsertar;
     aInsertar.equipo1 = eq1;
     aInsertar.equipo2 = eq2;
+
+    int i = 0;
+    while(strcmpi(fechas[i],"NULO") == 0)
+    {
+        i++;
+    }
+
+    strcpy(aInsertar.fecha,fechas[i]);
+    strcpy(fechas[i],"NULO");
 
     int probabilidadPrimero = eq1->probabilidad * 1000;
     int probabilidadSegundo = eq2->probabilidad * 1000;
@@ -485,7 +509,7 @@ void agregarPartido(nodoPartido** lista, Equipo* eq1, Equipo* eq2)              
             probabilidadSegundo = probabilidadPrimero / 12;
         }
 
-        probabilidadEmpate = probabilidadSegundo * 1.33;
+        probabilidadEmpate = probabilidadSegundo * 1.6;
     }
     else
     {
@@ -494,7 +518,7 @@ void agregarPartido(nodoPartido** lista, Equipo* eq1, Equipo* eq2)              
             probabilidadPrimero = probabilidadSegundo / 12;
         }
 
-        probabilidadEmpate = probabilidadPrimero * 1.33;
+        probabilidadEmpate = probabilidadPrimero * 1.6;
     }
 
     probabilidadTotal = probabilidadEmpate + probabilidadPrimero + probabilidadSegundo;
@@ -506,8 +530,9 @@ void agregarPartido(nodoPartido** lista, Equipo* eq1, Equipo* eq2)              
     {
         do
         {
-            definirGolesVictoria(&(aInsertar.golesEq1), probabilidadPrimero,&(aInsertar.golesEq2),probabilidadSegundo);
-        }while(aInsertar.golesEq1 < aInsertar.golesEq2);
+            definirGolesVictoria(&(aInsertar.golesEq1), probabilidadPrimero, &(aInsertar.golesEq2), probabilidadSegundo);
+
+        }while(aInsertar.golesEq1 <= aInsertar.golesEq2);
 
         eq1->ga = eq1->ga + aInsertar.golesEq2;
         eq1->gf = eq1->gf + aInsertar.golesEq1;
@@ -520,46 +545,49 @@ void agregarPartido(nodoPartido** lista, Equipo* eq1, Equipo* eq2)              
         eq2->mp = eq2->mp + 1;
         eq2->loss = eq2->loss + 1;
     }
-    else
+
+    if ((resultado > probabilidadPrimero) && (resultado <= probabilidadSegundo + probabilidadPrimero))      //gana el segundo
     {
-        if ((resultado > probabilidadPrimero) && (resultado <= probabilidadSegundo + probabilidadPrimero))      //gana el segundo
+        do
         {
-            do
-            {
-                definirGolesVictoria(&(aInsertar.golesEq2),probabilidadSegundo,&(aInsertar.golesEq1),probabilidadPrimero);
-            }while(aInsertar.golesEq2 < aInsertar.golesEq1);
+            definirGolesVictoria(&(aInsertar.golesEq2), probabilidadSegundo, &(aInsertar.golesEq1), probabilidadPrimero);
 
-            eq2->ga = eq2->ga + aInsertar.golesEq1;
-            eq2->gf = eq2->gf + aInsertar.golesEq2;
-            eq2->mp = eq2->mp + 1;
-            eq2->win = eq2->win + 1;
-            eq2->pts = eq2->pts +3;
+        }while(aInsertar.golesEq2 <= aInsertar.golesEq1);
 
-            eq1->ga = eq1->ga + aInsertar.golesEq2;
-            eq1->gf = eq1->gf + aInsertar.golesEq1;
-            eq1->mp = eq1->mp + 1;
-            eq1->loss = eq1->loss + 1;
-        }
+        eq2->ga = eq2->ga + aInsertar.golesEq1;
+        eq2->gf = eq2->gf + aInsertar.golesEq2;
+        eq2->mp = eq2->mp + 1;
+        eq2->win = eq2->win + 1;
+        eq2->pts = eq2->pts +3;
 
-        if (resultado > probabilidadSegundo + probabilidadPrimero)      //empate
-        {
-            resultadoDelEmpate(&(aInsertar.golesEq1),&(aInsertar.golesEq2));
-
-            eq1->ga = eq1->ga + aInsertar.golesEq1;
-            eq1->gf = eq1->gf + aInsertar.golesEq2;
-            eq1->mp = eq1->mp + 1;
-            eq1->pts = eq1->pts + 1;
-
-            eq2->ga = eq2->ga + aInsertar.golesEq1;
-            eq2->gf = eq2->gf + aInsertar.golesEq2;
-            eq2->mp = eq2->mp + 1;
-            eq2->pts = eq2->pts + 1;
-        }
+        eq1->ga = eq1->ga + aInsertar.golesEq2;
+        eq1->gf = eq1->gf + aInsertar.golesEq1;
+        eq1->mp = eq1->mp + 1;
+        eq1->loss = eq1->loss + 1;
     }
+
+    if (resultado > (probabilidadSegundo + probabilidadPrimero))      //empate
+    {
+        resultadoDelEmpate(&(aInsertar.golesEq1),&(aInsertar.golesEq2));
+
+        eq1->ga = eq1->ga + aInsertar.golesEq1;
+        eq1->gf = eq1->gf + aInsertar.golesEq2;
+        eq1->mp = eq1->mp + 1;
+        eq1->pts = eq1->pts + 1;
+
+        eq2->ga = eq2->ga + aInsertar.golesEq1;
+        eq2->gf = eq2->gf + aInsertar.golesEq2;
+        eq2->mp = eq2->mp + 1;
+        eq2->pts = eq2->pts + 1;
+    }
+
+    printf("%s\n",aInsertar.fecha);
+    printf("%s %i - %i %s\n\n",aInsertar.equipo1, aInsertar.golesEq1, aInsertar.golesEq2, aInsertar.equipo2);
+
     insertarAlFinalNodoPartido(lista,aInsertar);
 }
 
-void cargarPartidosGrupos(nodoPartido** lista, Grupo grupo)
+void cargarPartidosGrupos(nodoPartido** lista, Grupo grupo, char fechas[63][30])
 {
     /*printf("%s vs %s\n", getEquipo(grupo.equipos, 0), getEquipo(grupo.equipos, 1));
     printf("%s vs %s\n", getEquipo(grupo.equipos, 2), getEquipo(grupo.equipos, 3));
@@ -567,25 +595,26 @@ void cargarPartidosGrupos(nodoPartido** lista, Grupo grupo)
     printf("%s vs %s\n", getEquipo(grupo.equipos, 3), getEquipo(grupo.equipos, 1));
     printf("%s vs %s\n", getEquipo(grupo.equipos, 1), getEquipo(grupo.equipos, 2));
     printf("%s vs %s\n", getEquipo(grupo.equipos, 3), getEquipo(grupo.equipos, 0));*/
-    agregarPartido(lista, getEquipo(grupo.equipos, 0), getEquipo(grupo.equipos, 1));
-    agregarPartido(lista, getEquipo(grupo.equipos, 2), getEquipo(grupo.equipos, 3));
-    agregarPartido(lista, getEquipo(grupo.equipos, 0), getEquipo(grupo.equipos, 2));
-    agregarPartido(lista, getEquipo(grupo.equipos, 3), getEquipo(grupo.equipos, 1));
-    agregarPartido(lista, getEquipo(grupo.equipos, 1), getEquipo(grupo.equipos, 2));
-    agregarPartido(lista, getEquipo(grupo.equipos, 3), getEquipo(grupo.equipos, 0));
+    agregarPartido(lista, getEquipo(grupo.equipos, 0), getEquipo(grupo.equipos, 1), fechas);
+    agregarPartido(lista, getEquipo(grupo.equipos, 2), getEquipo(grupo.equipos, 3), fechas);
+    agregarPartido(lista, getEquipo(grupo.equipos, 0), getEquipo(grupo.equipos, 2), fechas);
+    agregarPartido(lista, getEquipo(grupo.equipos, 3), getEquipo(grupo.equipos, 1), fechas);
+    agregarPartido(lista, getEquipo(grupo.equipos, 1), getEquipo(grupo.equipos, 2), fechas);
+    agregarPartido(lista, getEquipo(grupo.equipos, 3), getEquipo(grupo.equipos, 0), fechas);
 }
 
-void crearArregloGrupoPartidosRandom(GrupoPartido* partidosGrupo, Grupo* grupos)
+void crearArregloGrupoPartidosRandom(GrupoPartido* partidosGrupo, Grupo* grupos,char fechas[][30])
 {
     for (int i = 0; i < VALIDOS_GRUPO; i++)
     {
         partidosGrupo[i].letra = grupos[i].letra;
         partidosGrupo[i].partidos = NULL;
-        cargarPartidosGrupos(&(partidosGrupo->partidos), grupos[i]);
+        cargarPartidosGrupos(&(partidosGrupo->partidos), grupos[i], fechas);
     }
 }
 
-bool comparar_puntos(Equipo *a, Equipo *b) { // devuelve true si b tiene mas puntos que a
+bool comparar_puntos(Equipo *a, Equipo *b)
+{ // devuelve true si b tiene mas puntos que a
     if (a->pts < b->pts) return true;
     if (a->pts > b->pts) return false;
     if ((a->gf - a->ga) < (b->gf - b->ga)) return true;
@@ -594,7 +623,8 @@ bool comparar_puntos(Equipo *a, Equipo *b) { // devuelve true si b tiene mas pun
     if (a->gf > b->gf) return false;
 }
 
-void insertar_equipo_ordenado(nodoGrupoEquipo **list, Equipo *e) {
+void insertar_equipo_ordenado(nodoGrupoEquipo **list, Equipo *e)
+{
     if (*list == NULL || comparar_puntos((*list)->equipo, e)) {
         nodoGrupoEquipo *aux = crearNodoGrupoEquipo(e);
         aux->siguiente = *list;
@@ -602,8 +632,8 @@ void insertar_equipo_ordenado(nodoGrupoEquipo **list, Equipo *e) {
     } else insertar_equipo_ordenado(&(*list)->siguiente, e);
 }
 
-void ordenar_grupo_por_puntos(nodoGrupoEquipo **list) {
-    nodoGrupoEquipo *aux;
+void ordenar_grupo_por_puntos(nodoGrupoEquipo **list)
+{
     nodoGrupoEquipo *temp = *list;
     *list = NULL;
     while (temp != NULL) {
@@ -612,18 +642,20 @@ void ordenar_grupo_por_puntos(nodoGrupoEquipo **list) {
     }
 }
 
-bool is_in_grupo(nodoGrupoEquipo *list, char *equipo) {
+bool is_in_grupo(nodoGrupoEquipo *list, char *equipo)
+{
     if (list == NULL) return false;
     if (strcmp(equipo, list->equipo->nomEquipo) == 0) return true;
     return is_in_grupo(list->siguiente, equipo);
 }
 
-bool clasifica(nodoGrupoEquipo *list, char *equipo) {
+bool clasifica(nodoGrupoEquipo *list, char *equipo)
+{
     if (strcmp(list->equipo->nomEquipo, equipo) == 0 || strcmp(list->siguiente->equipo->nomEquipo, equipo) == 0) return true;
     return false;
 }
 
-void crearArregloGrupoPartidosManipulado(GrupoPartido partidosGrupo[VALIDOS_GRUPO], Grupo grupos[VALIDOS_GRUPO], char* equipoElegido, int opcion)   ////////PSEUDOCODIGO----FALTA HACER
+void crearArregloGrupoPartidosManipulado(GrupoPartido partidosGrupo[VALIDOS_GRUPO], Grupo grupos[VALIDOS_GRUPO], char* equipoElegido, int opcion, char fechas[][30])   ////////PSEUDOCODIGO----FALTA HACER
 {
     int flag;
 
@@ -633,18 +665,35 @@ void crearArregloGrupoPartidosManipulado(GrupoPartido partidosGrupo[VALIDOS_GRUP
         {
             partidosGrupo[i].letra = grupos[i].letra;
             partidosGrupo[i].partidos = NULL;
-            cargarPartidosGrupos(&(partidosGrupo->partidos), grupos[i]);
+            cargarPartidosGrupos(&(partidosGrupo->partidos), grupos[i], fechas);
         }
         else
         {
-            do
+            printf("Esta en el grupo %c",grupos[i].letra);
+            if(opcion == 1)
             {
-                cargarPartidosGrupos(&(partidosGrupo->partidos), grupos[i]);
-                flag = (!clasifica(grupos[i].equipos, equipoElegido));  ///   0 = NO         1 = SI
-            }while(flag == 0);
+                do
+                {
+                    cargarPartidosGrupos(&(partidosGrupo->partidos), grupos[i], fechas);
+                    nodoGrupoEquipo* seg = grupos[i].equipos;
+                    ordenar_grupo_por_puntos(&seg);
+                    flag = (!clasifica(seg, equipoElegido));  ///   0 = NO         1 = SI
+                }while(flag == 0);
+            }
+            if(opcion == 2)
+            {
+                do
+                {
+                    cargarPartidosGrupos(&(partidosGrupo->partidos), grupos[i], fechas);
+                    nodoGrupoEquipo* seg = grupos[i].equipos;
+                    ordenar_grupo_por_puntos(&seg);
+                    flag = (!clasifica(seg, equipoElegido));  ///   0 = NO         1 = SI
+                }while(flag == 1);
+            }
         }
     }
 }
+
 
 ///MAIN
 
@@ -657,15 +706,17 @@ int main()
     int flag;
     char equipoElegido[20];
     Grupo grupos[VALIDOS_GRUPO];
+    char fechas[63][30];
     nodoEquipo* listaDeEquipos = NULL;
 
     ///1-
     leerArchivo(&listaDeEquipos);
+    leerFechas(fechas);
 
     ///2-
     inicializarGrupos(grupos, VALIDOS_GRUPO);
     cargarGrupos(grupos, VALIDOS_GRUPO, listaDeEquipos);
-    // mostrarGrupos(grupos, VALIDOS_GRUPO);
+    mostrarGrupos(grupos, VALIDOS_GRUPO);
 
     ///3-
     ///4-
@@ -685,8 +736,10 @@ int main()
     switch(opcion)
     {
     case 1:/// OPCION TODO RANDOM
-        crearArregloGrupoPartidosRandom(partidosGrupo, grupos);
-        printf("\n");
+        system("cls");
+        crearArregloGrupoPartidosRandom(partidosGrupo, grupos, fechas);
+        ///mostrarResultadosPartidosGrupos(partidosGrupo);
+        printf("POSICIONES FINALES:\n");
         mostrarGrupos(grupos, VALIDOS_GRUPO);
         break;
 
@@ -716,7 +769,11 @@ int main()
             fflush(stdin);
             scanf("%i",&opcion2);
         }
-        // crearArregloGrupoPartidosManipulado(partidosGrupo, grupos, equipoElegido, opcion2);  ///OPCION ELEGIR RESULTADO (1= clasifica) (2= no clasifica)
+
+        system("cls");
+        crearArregloGrupoPartidosManipulado(partidosGrupo, grupos, equipoElegido, opcion2, fechas);  ///OPCION ELEGIR RESULTADO (1= clasifica) (2= no clasifica)
+        ///mostrarResultadosPartidosGrupos(partidosGrupo);
+        mostrarGrupos(grupos, VALIDOS_GRUPO);
     }
     return 0;
 }
