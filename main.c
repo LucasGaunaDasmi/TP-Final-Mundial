@@ -300,25 +300,10 @@ nodoPartido* crearNodoPartido(Partido aInsertar)
 }
 
 void insertarAlFinalNodoPartido(nodoPartido** lista,Partido aInsertar)
-{
-    nodoPartido* nuevo = crearNodoPartido(aInsertar);
-    nodoPartido* seg;
-
-    if(*lista == NULL)
-    {
-        (*lista) = nuevo;
-    }
-    else
-    {
-        seg = *lista;
-
-        while(seg->siguiente != NULL)
-        {
-            seg = seg->siguiente;
-        }
-
-        seg->siguiente = nuevo;
-    }
+{// recursiva
+    printf("insertando %s", aInsertar.equipo1);  
+    if (*lista != NULL) insertarAlFinalNodoPartido(&(*lista)->siguiente,aInsertar);
+    else *lista = crearNodoPartido(aInsertar);
 }
 
 Equipo* getEquipo(nodoGrupoEquipo* grupo, int indexEquipo)
