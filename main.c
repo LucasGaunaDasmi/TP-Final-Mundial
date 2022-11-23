@@ -126,8 +126,6 @@ void crearArregloGrupoPartidosManipulado(GrupoPartido*, Grupo*, char*, bool, cha
 
 void jugarFaseDeGrupos(GrupoPartido*, Grupo* , char [][30], nodoEquipo*, fase[]);                 ///FUNCION PRINICIPAL DE LA FASE DE GRUPOS
 
-void print_partido(Partido*);                                                                     ///IMPRIME LOS RESULTADOS DE UN PARTIDO
-
 
 ///IMPLEMENTACION DE FUNCIONES
 
@@ -728,35 +726,171 @@ void mostrarPartidosGrupos(GrupoPartido* partidosGrupo)
 void muestraClasificados(fase fases[])
 {
     nodoPartido* seg = fases[0].partidos;
-    printf("CLASIFICADOS A OCTAVOS DE FINAL\n");
+    printf("CLASIFICADOS A OCTAVOS DE FINAL:\n\n");
 
     for(int i = 0; i < 8; i++)
     {
-        printf("\n%s\n", seg->partido.fecha);
-        printf("%s\n",seg->partido.equipo1);
+        printf("%s vs.",seg->partido.equipo1);
         printf("%s\n",seg->partido.equipo2);
         seg = seg->siguiente;
     }
 }
 
-void penales(Partido* partido)
+void resultadoDelEmpateConPenales(int* goles1, int* goles2, int* penales1, int* penales2)
 {
-    int definicion;
-    partido->penales1 = rand()%6;
-    partido->penales2 = rand()%6;
+    int numeroRandom;
+    numeroRandom = rand()%101;
 
-    if(partido->penales1 == partido->penales2)
+    if(numeroRandom <= 30)
+    {
+         (*goles1) = 0;
+         (*goles2) = 0;
+    }
+    if(30 < numeroRandom && numeroRandom <= 70)
+    {
+        (*goles1) = 1;
+        (*goles2) = 1;
+    }
+    if(70 < numeroRandom && numeroRandom <= 95)
+    {
+        (*goles1) = 2;
+        (*goles2) = 2;
+    }
+    if(95 < numeroRandom)
+    {
+        (*goles1) = 3;
+        (*goles2) = 3;
+    }
+
+    int definicion;
+    (*penales1) = rand()%6;
+    (*penales2) = rand()%6;
+
+    if((*penales1) == (*penales2))
     {
         definicion = rand()%2;
         if(definicion == 0)
         {
-            (partido->penales1)++;
+            (*penales1)++;
         }
         else
         {
-            (partido->penales2)++;
+            (*penales2)++;
         }
     }
+}
+
+void agregarPartidoConPenales(nodoPartido** lista, Equipo* eq1, Equipo* eq2, char fechas[][30])
+{
+    Partido aInsertar;
+    aInsertar.equipo1 = eq1;
+    aInsertar.equipo2 = eq2;
+
+    int i = 0;
+    while(strcmpi(fechas[i],"NULO") == 0)
+    {
+        i++;
+    }
+
+    strcpy(aInsertar.fecha,fechas[i]);
+    strcpy(fechas[i],"NULO");
+
+    int probabilidadPrimero = eq1->probabilidad * 1000;
+    int probabilidadSegundo = eq2->probabilidad * 1000;
+    int probabilidadEmpate;
+    int probabilidadTotal;
+    int resultado;
+
+    if(probabilidadPrimero >= probabilidadSegundo)
+    {
+        if(probabilidadPrimero > probabilidadSegundo * 12 && probabilidadSegundo != 0 && probabilidadPrimero != 1000000)
+        {
+            probabilidadSegundo = probabilidadPrimero / 12;
+        }
+
+        probabilidadEmpate = probabilidadSegundo * 1.6;
+    }
+    else
+    {
+        if(probabilidadSegundo > probabilidadPrimero * 12 && (probabilidadPrimero != 0) && probabilidadSegundo != 1000000)
+        {
+            probabilidadPrimero = probabilidadSegundo / 12;
+        }
+
+        probabilidadEmpate = probabilidadPrimero * 1.6;
+    }
+
+    probabilidadTotal = probabilidadEmpate + probabilidadPrimero + probabilidadSegundo;
+
+    resultado = rand()%(probabilidadTotal+1);
+
+    //printf("======================== P %s = %d ============\n", eq1->nomEquipo, probabilidadPrimero);
+    //printf("======================== P %s = %d ============\n", eq2->nomEquipo, probabilidadSegundo);
+    if (resultado < probabilidadPrimero)   //gana el primero
+    {
+        do
+        {
+            definirGolesVictoria(&(aInsertar.golesEq1), probabilidadPrimero, &(aInsertar.golesEq2), probabilidadSegundo);
+
+        }while(aInsertar.golesEq1 <= aInsertar.golesEq2);
+
+        aInsertar.penales1 = 0;
+        aInsertar.penales2 = 0;
+
+        eq1->ga = eq1->ga + aInsertar.golesEq2;
+        eq1->gf = eq1->gf + aInsertar.golesEq1;
+        eq1->mp = eq1->mp + 1;
+        eq1->win = eq1->win + 1;
+        eq1->pts = eq1->pts + 3;
+
+        eq2->ga = eq2->ga + aInsertar.golesEq1;
+        eq2->gf = eq2->gf + aInsertar.golesEq2;
+        eq2->mp = eq2->mp + 1;
+        eq2->loss = eq2->loss + 1;
+    }
+
+    if ((resultado >= probabilidadPrimero) && (resultado < probabilidadSegundo + probabilidadPrimero))      //gana el segundo
+    {
+        do
+        {
+            definirGolesVictoria(&(aInsertar.golesEq2), probabilidadSegundo, &(aInsertar.golesEq1), probabilidadPrimero);
+
+        }while(aInsertar.golesEq2 <= aInsertar.golesEq1);
+
+        aInsertar.penales1 = 0;
+        aInsertar.penales1 = 0;
+
+        eq2->ga = eq2->ga + aInsertar.golesEq1;
+        eq2->gf = eq2->gf + aInsertar.golesEq2;
+        eq2->mp = eq2->mp + 1;
+        eq2->win = eq2->win + 1;
+        eq2->pts = eq2->pts +3;
+
+        eq1->ga = eq1->ga + aInsertar.golesEq2;
+        eq1->gf = eq1->gf + aInsertar.golesEq1;
+        eq1->mp = eq1->mp + 1;
+        eq1->loss = eq1->loss + 1;
+    }
+
+    if (resultado >= (probabilidadSegundo + probabilidadPrimero))      //empate
+    {
+        resultadoDelEmpateConPenales(&(aInsertar.golesEq1),&(aInsertar.golesEq2),&(aInsertar.penales1),&(aInsertar.penales2));
+
+        eq1->ga = eq1->ga + aInsertar.golesEq1;
+        eq1->gf = eq1->gf + aInsertar.golesEq2;
+        eq1->mp = eq1->mp + 1;
+        eq1->pts = eq1->pts + 1;
+
+        eq2->ga = eq2->ga + aInsertar.golesEq1;
+        eq2->gf = eq2->gf + aInsertar.golesEq2;
+        eq2->mp = eq2->mp + 1;
+        eq2->pts = eq2->pts + 1;
+    }
+
+    ///printf("%s\n",aInsertar.fecha);
+    ///printf("%s %i - %i %s\n\n",aInsertar.equipo1, aInsertar.golesEq1, aInsertar.golesEq2, aInsertar.equipo2);
+
+    insertarAlFinalNodoPartido(lista,aInsertar);
 }
 
 void organizarOctavos(fase fases[], Grupo grupos[], char fechas [][30])
@@ -770,129 +904,49 @@ void organizarOctavos(fase fases[], Grupo grupos[], char fechas [][30])
     seg = grupos[0].equipos->equipo;
     seg2 = grupos[1].equipos->siguiente->equipo;
 
-    agregarPartido(&(fases[0].partidos), seg, seg2, fechas);
-
-    if(fases[0].partidos->partido.golesEq1 == fases[0].partidos->partido.golesEq2)
-    {
-        penales(&(fases[0].partidos->partido));
-    }
-    else
-    {
-        fases[0].partidos->partido.penales1 = 0;
-        fases[0].partidos->partido.penales2 = 0;
-    }
+    agregarPartidoConPenales(&(fases[0].partidos), seg, seg2, fechas);
 
     /// O2
     seg = grupos[2].equipos->equipo;
     seg2 = grupos[3].equipos->siguiente->equipo;
 
-    agregarPartido(&(fases[0].partidos), seg, seg2, fechas);
-
-    if(fases[0].partidos->partido.golesEq1 == fases[0].partidos->partido.golesEq2)
-    {
-        penales(&(fases[0].partidos->partido));
-    }
-    else
-    {
-        fases[0].partidos->partido.penales1 = 0;
-        fases[0].partidos->partido.penales2 = 0;
-    }
+    agregarPartidoConPenales(&(fases[0].partidos), seg, seg2, fechas);
 
     /// O3
     seg = grupos[4].equipos->equipo;
     seg2 = grupos[5].equipos->siguiente->equipo;
 
-    agregarPartido(&(fases[0].partidos), seg, seg2, fechas);
-
-    if(fases[0].partidos->partido.golesEq1 == fases[0].partidos->partido.golesEq2)
-    {
-        penales(&(fases[0].partidos->partido));
-    }
-    else
-    {
-        fases[0].partidos->partido.penales1 = 0;
-        fases[0].partidos->partido.penales2 = 0;
-    }
+    agregarPartidoConPenales(&(fases[0].partidos), seg, seg2, fechas);
 
     /// O4
     seg = grupos[6].equipos->equipo;
     seg2 = grupos[7].equipos->siguiente->equipo;
 
-    agregarPartido(&(fases[0].partidos), seg, seg2, fechas);
-
-    if(fases[0].partidos->partido.golesEq1 == fases[0].partidos->partido.golesEq2)
-    {
-        penales(&(fases[0].partidos->partido));
-    }
-    else
-    {
-        fases[0].partidos->partido.penales1 = 0;
-        fases[0].partidos->partido.penales2 = 0;
-    }
+    agregarPartidoConPenales(&(fases[0].partidos), seg, seg2, fechas);
 
     /// O5
     seg = grupos[1].equipos->equipo;
     seg2 = grupos[0].equipos->siguiente->equipo;
 
-    agregarPartido(&(fases[0].partidos), seg, seg2, fechas);
-
-    if(fases[0].partidos->partido.golesEq1 == fases[0].partidos->partido.golesEq2)
-    {
-        penales(&(fases[0].partidos->partido));
-    }
-    else
-    {
-        fases[0].partidos->partido.penales1 = 0;
-        fases[0].partidos->partido.penales2 = 0;
-    }
+    agregarPartidoConPenales(&(fases[0].partidos), seg, seg2, fechas);
 
     /// O6
     seg = grupos[3].equipos->equipo;
     seg2 = grupos[2].equipos->siguiente->equipo;
 
-    agregarPartido(&(fases[0].partidos), seg, seg2, fechas);
-
-    if(fases[0].partidos->partido.golesEq1 == fases[0].partidos->partido.golesEq2)
-    {
-        penales(&(fases[0].partidos->partido));
-    }
-    else
-    {
-        fases[0].partidos->partido.penales1 = 0;
-        fases[0].partidos->partido.penales2 = 0;
-    }
+    agregarPartidoConPenales(&(fases[0].partidos), seg, seg2, fechas);
 
     /// O7
     seg = grupos[5].equipos->equipo;
     seg2 = grupos[4].equipos->siguiente->equipo;
 
-    agregarPartido(&(fases[0].partidos), seg, seg2, fechas);
-
-    if(fases[0].partidos->partido.golesEq1 == fases[0].partidos->partido.golesEq2)
-    {
-        penales(&(fases[0].partidos->partido));
-    }
-    else
-    {
-        fases[0].partidos->partido.penales1 = 0;
-        fases[0].partidos->partido.penales2 = 0;
-    }
+    agregarPartidoConPenales(&(fases[0].partidos), seg, seg2, fechas);
 
     /// O8
     seg = grupos[7].equipos->equipo;
     seg2 = grupos[6].equipos->siguiente->equipo;
 
-    agregarPartido(&(fases[0].partidos), seg, seg2, fechas);
-
-    if(fases[0].partidos->partido.golesEq1 == fases[0].partidos->partido.golesEq2)
-    {
-        penales(&(fases[0].partidos->partido));
-    }
-    else
-    {
-        fases[0].partidos->partido.penales1 = 0;
-        fases[0].partidos->partido.penales2 = 0;
-    }
+    agregarPartidoConPenales(&(fases[0].partidos), seg, seg2, fechas);
 }
 
 Equipo* ganadorLlave(nodoPartido* partidos)
@@ -931,17 +985,7 @@ void organizarCuartos(fase fases[], char fechas [][30])
     Equipo* eq2 = ganadorLlave(seg);
     seg = seg->siguiente;
 
-    agregarPartido(&(fases[1].partidos), eq1, eq2, fechas);
-
-    if(fases[1].partidos->partido.golesEq1 == fases[1].partidos->partido.golesEq2)
-    {
-        penales(&(fases[1].partidos->partido));
-    }
-    else
-    {
-        fases[1].partidos->partido.penales1 = 0;
-        fases[1].partidos->partido.penales2 = 0;
-    }
+    agregarPartidoConPenales(&(fases[1].partidos), eq1, eq2, fechas);
 
     ///C2 O3vsO4
 
@@ -950,17 +994,7 @@ void organizarCuartos(fase fases[], char fechas [][30])
     eq2 = ganadorLlave(seg);
     seg = seg->siguiente;
 
-    agregarPartido(&(fases[1].partidos), eq1, eq2, fechas);
-
-    if(fases[1].partidos->partido.golesEq1 == fases[1].partidos->partido.golesEq2)
-    {
-        penales(&(fases[1].partidos->partido));
-    }
-    else
-    {
-        fases[1].partidos->partido.penales1 = 0;
-        fases[1].partidos->partido.penales2 = 0;
-    }
+    agregarPartidoConPenales(&(fases[1].partidos), eq1, eq2, fechas);
 
     ///C3 O5vsO6
 
@@ -969,17 +1003,7 @@ void organizarCuartos(fase fases[], char fechas [][30])
     eq2 = ganadorLlave(seg);
     seg = seg->siguiente;
 
-    agregarPartido(&(fases[1].partidos), eq1, eq2, fechas);
-
-    if(fases[1].partidos->partido.golesEq1 == fases[1].partidos->partido.golesEq2)
-    {
-        penales(&(fases[1].partidos->partido));
-    }
-    else
-    {
-        fases[1].partidos->partido.penales1 = 0;
-        fases[1].partidos->partido.penales2 = 0;
-    }
+    agregarPartidoConPenales(&(fases[1].partidos), eq1, eq2, fechas);
 
     ///C4 O7vsO8
 
@@ -988,17 +1012,7 @@ void organizarCuartos(fase fases[], char fechas [][30])
     eq2 = ganadorLlave(seg);
     seg = seg->siguiente;
 
-    agregarPartido(&(fases[1].partidos), eq1, eq2, fechas);
-
-    if(fases[1].partidos->partido.golesEq1 == fases[1].partidos->partido.golesEq2)
-    {
-        penales(&(fases[1].partidos->partido));
-    }
-    else
-    {
-        fases[1].partidos->partido.penales1 = 0;
-        fases[1].partidos->partido.penales2 = 0;
-    }
+    agregarPartidoConPenales(&(fases[1].partidos), eq1, eq2, fechas);
 }
 
 void organizarSemis(fase fases[], char fechas [][30])
@@ -1014,17 +1028,7 @@ void organizarSemis(fase fases[], char fechas [][30])
     Equipo* eq2 = ganadorLlave(seg);
     seg = seg->siguiente;
 
-    agregarPartido(&(fases[2].partidos), eq1, eq2, fechas);
-
-    if(fases[2].partidos->partido.golesEq1 == fases[2].partidos->partido.golesEq2)
-    {
-        penales(&(fases[2].partidos->partido));
-    }
-    else
-    {
-        fases[2].partidos->partido.penales1 = 0;
-        fases[2].partidos->partido.penales2 = 0;
-    }
+    agregarPartidoConPenales(&(fases[2].partidos), eq1, eq2, fechas);
 
     ///S2 C2VSC3
 
@@ -1033,17 +1037,7 @@ void organizarSemis(fase fases[], char fechas [][30])
     eq2 = ganadorLlave(seg);
     seg = seg->siguiente;
 
-    agregarPartido(&(fases[2].partidos), eq1, eq2, fechas);
-
-    if(fases[2].partidos->partido.golesEq1 == fases[2].partidos->partido.golesEq2)
-    {
-        penales(&(fases[2].partidos->partido));
-    }
-    else
-    {
-        fases[2].partidos->partido.penales1 = 0;
-        fases[2].partidos->partido.penales2 = 0;
-    }
+    agregarPartidoConPenales(&(fases[2].partidos), eq1, eq2, fechas);
 }
 
 void organizarFinal(fase fases[], char fechas [][30])
@@ -1059,18 +1053,7 @@ void organizarFinal(fase fases[], char fechas [][30])
     Equipo* eq2 = ganadorLlave(seg);
     seg = seg->siguiente;
 
-    agregarPartido(&(fases[3].partidos), eq1, eq2, fechas);
-
-    if(fases[3].partidos->partido.golesEq1 == fases[3].partidos->partido.golesEq2)
-    {
-        penales(&(fases[3].partidos->partido));
-    }
-    else
-    {
-        fases[3].partidos->partido.penales1 = 0;
-        fases[3].partidos->partido.penales2 = 0;
-    }
-
+    agregarPartidoConPenales(&(fases[3].partidos), eq1, eq2, fechas);
 }
 
 void simulacion(GrupoPartido* partidosGrupo, Grupo* grupos, char fechas[][30], nodoEquipo* listaDeEquipos, fase fases[])
@@ -1153,6 +1136,85 @@ void simulacion(GrupoPartido* partidosGrupo, Grupo* grupos, char fechas[][30], n
     organizarFinal(fases, fechas);
 }
 
+void muestraFasesFinalesConResultados(fase fases[], int i)
+{
+    nodoPartido* auxiliar;
+    auxiliar = fases[i].partidos;   //octavos
+
+    i++;
+    nodoPartido* auxiliarCuartos;   //cuartos
+    auxiliarCuartos = fases[i].partidos;
+
+    i++;
+    nodoPartido* auxiliarSemis;
+    auxiliarSemis = fases[i].partidos;
+
+    i++;
+    nodoPartido* auxiliarFinal;
+    auxiliarFinal = fases[i].partidos;
+
+    printf("\n\n%14s: %i(%i)__\n",auxiliar->partido.equipo1,auxiliar->partido.golesEq1,auxiliar->partido.penales1);
+    printf("%14s: %i(%i)  |\n",auxiliar->partido.equipo2,auxiliar->partido.golesEq2,auxiliar->partido.penales2);
+
+    printf("                      |____");
+    printf("%14s: %i(%i)______\n",auxiliarCuartos->partido.equipo1,auxiliarCuartos->partido.golesEq1,auxiliarCuartos->partido.penales1);
+    auxiliar = auxiliar->siguiente;
+    printf("                      |    %14s: %i(%i)      |\n",auxiliarCuartos->partido.equipo2,auxiliarCuartos->partido.golesEq2,auxiliarCuartos->partido.penales2);
+
+    printf("%14s: %i(%i)__|                              |\n",auxiliar->partido.equipo1,auxiliar->partido.golesEq1,auxiliar->partido.penales1);
+    printf("%14s: %i(%i)                                 |______%14s: %i(%i)________\n",auxiliar->partido.equipo2,auxiliar->partido.golesEq2,auxiliar->partido.penales2,auxiliarSemis->partido.equipo1,auxiliarSemis->partido.golesEq1,auxiliarSemis->partido.penales1);
+
+
+
+
+
+
+    auxiliarCuartos = auxiliarCuartos->siguiente;
+    auxiliar = auxiliar->siguiente;
+    printf("%14s: %i(%i)__                               |      %14s: %i(%i)        |\n",auxiliar->partido.equipo1,auxiliar->partido.golesEq1,auxiliar->partido.penales1,auxiliarSemis->partido.equipo2,auxiliarSemis->partido.golesEq2,auxiliarSemis->partido.penales2);
+    printf("%14s: %i(%i)  |                              |                                  |\n",auxiliar->partido.equipo2,auxiliar->partido.golesEq2,auxiliar->partido.penales2);
+    printf("                      |____");
+
+    printf("%14s: %i(%i)______|                                  |\n",auxiliarCuartos->partido.equipo1,auxiliarCuartos->partido.golesEq1,auxiliarCuartos->partido.penales1);
+
+    auxiliarSemis = auxiliarSemis->siguiente;
+    auxiliar = auxiliar->siguiente;
+    printf("                      |    %14s: %i(%i)                                         |\n",auxiliarCuartos->partido.equipo2,auxiliarCuartos->partido.golesEq2,auxiliarCuartos->partido.penales2);
+    printf("%14s: %i(%i)__|                                                                 |\n",auxiliar->partido.equipo1,auxiliar->partido.golesEq1,auxiliar->partido.penales1);
+
+    printf("%14s: %i(%i)                                                                    |\n",auxiliar->partido.equipo2,auxiliar->partido.golesEq2,auxiliar->partido.penales2);
+    printf("                                                                                        |%14s: %i(%i)\n",auxiliarFinal->partido.equipo1,auxiliarFinal->partido.golesEq1,auxiliarFinal->partido.penales1);
+    printf("                                                                                        |------\n");
+    printf("                                                                                        |%14s: %i(%i)",auxiliarFinal->partido.equipo2,auxiliarFinal->partido.golesEq2,auxiliarFinal->partido.penales1);
+
+
+
+    auxiliarCuartos = auxiliarCuartos->siguiente;
+    auxiliar = auxiliar->siguiente;
+
+    printf("\n%14s: %i(%i)__                                                                  |\n",auxiliar->partido.equipo1,auxiliar->partido.golesEq1,auxiliar->partido.penales1);
+    printf("%14s: %i(%i)  |                                                                 |\n",auxiliar->partido.equipo2,auxiliar->partido.golesEq2,auxiliar->partido.penales2);
+    printf("                      |____");
+    printf("%14s: %i(%i)______                                   | \n",auxiliarCuartos->partido.equipo1,auxiliarCuartos->partido.golesEq1,auxiliarCuartos->partido.penales1);
+    auxiliar = auxiliar->siguiente;
+    printf("                      |    %14s: %i(%i)      |                                  |\n",auxiliarCuartos->partido.equipo2,auxiliarCuartos->partido.golesEq2,auxiliarCuartos->partido.penales2);
+
+    printf("%14s: %i(%i)__|                              |                                  |\n",auxiliar->partido.equipo1,auxiliar->partido.golesEq1,auxiliar->partido.penales1);
+    printf("%14s: %i(%i)                                 |______%14s: %i(%i)________|\n",auxiliar->partido.equipo2,auxiliar->partido.golesEq2,auxiliar->partido.penales2,auxiliarSemis->partido.equipo1,auxiliarSemis->partido.golesEq1,auxiliarSemis->partido.penales1);
+
+    auxiliarCuartos = auxiliarCuartos->siguiente;
+    auxiliar = auxiliar->siguiente;
+    printf("%14s: %i(%i)__                               |      %14s: %i(%i)\n",auxiliar->partido.equipo1,auxiliar->partido.golesEq1,auxiliar->partido.penales1,auxiliarSemis->partido.equipo2,auxiliarSemis->partido.golesEq2,auxiliarSemis->partido.penales2);
+    printf("%14s: %i(%i)  |                              |\n",auxiliar->partido.equipo2,auxiliar->partido.golesEq2,auxiliar->partido.penales2);
+    printf("                      |____");
+    printf("%14s: %i(%i)______|\n",auxiliarCuartos->partido.equipo1,auxiliarCuartos->partido.golesEq1,auxiliarCuartos->partido.penales1);
+    auxiliar = auxiliar->siguiente;
+    printf("                      |    %14s: %i(%i)\n",auxiliarCuartos->partido.equipo2,auxiliarCuartos->partido.golesEq2,auxiliarCuartos->partido.penales2);
+
+    printf("%14s: %i(%i)__|\n",auxiliar->partido.equipo1,auxiliar->partido.golesEq1,auxiliar->partido.penales1);
+    printf("%14s: %i(%i)\n\n",auxiliar->partido.equipo2,auxiliar->partido.golesEq2,auxiliar->partido.penales2);
+}
+
 ///MAIN
 
 int main()
@@ -1178,7 +1240,7 @@ int main()
     simulacion(partidosGrupo, grupos, fechas, listaDeEquipos, fases);
 
     ///VISUALIZAR RESULTADOS
-
+    muestraFasesFinalesConResultados(fases,0);
 
     return 0;
 }
