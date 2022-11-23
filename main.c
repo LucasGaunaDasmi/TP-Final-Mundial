@@ -541,8 +541,6 @@ void agregarPartido(nodoPartido** lista, Equipo* eq1, Equipo* eq2, char fechas[]
 
     resultado = rand()%(probabilidadTotal+1);
 
-    //printf("======================== P %s = %d ============\n", eq1->nomEquipo, probabilidadPrimero);
-    //printf("======================== P %s = %d ============\n", eq2->nomEquipo, probabilidadSegundo);
     if (resultado < probabilidadPrimero)   //gana el primero
     {
         do
@@ -598,20 +596,11 @@ void agregarPartido(nodoPartido** lista, Equipo* eq1, Equipo* eq2, char fechas[]
         eq2->pts = eq2->pts + 1;
     }
 
-    ///printf("%s\n",aInsertar.fecha);
-    ///printf("%s %i - %i %s\n\n",aInsertar.equipo1, aInsertar.golesEq1, aInsertar.golesEq2, aInsertar.equipo2);
-
     insertarAlFinalNodoPartido(lista,aInsertar);
 }
 
 void cargarPartidosGrupos(nodoPartido** lista, Grupo grupo, char fechas[63][30])
 {
-    /*printf("%s vs %s\n", getEquipo(grupo.equipos, 0), getEquipo(grupo.equipos, 1));
-    printf("%s vs %s\n", getEquipo(grupo.equipos, 2), getEquipo(grupo.equipos, 3));
-    printf("%s vs %s\n", getEquipo(grupo.equipos, 0), getEquipo(grupo.equipos, 2));
-    printf("%s vs %s\n", getEquipo(grupo.equipos, 3), getEquipo(grupo.equipos, 1));
-    printf("%s vs %s\n", getEquipo(grupo.equipos, 1), getEquipo(grupo.equipos, 2));
-    printf("%s vs %s\n", getEquipo(grupo.equipos, 3), getEquipo(grupo.equipos, 0));*/
     agregarPartido(lista, getEquipo(grupo.equipos, 0), getEquipo(grupo.equipos, 1), fechas);
     agregarPartido(lista, getEquipo(grupo.equipos, 2), getEquipo(grupo.equipos, 3), fechas);
     agregarPartido(lista, getEquipo(grupo.equipos, 0), getEquipo(grupo.equipos, 2), fechas);
@@ -696,7 +685,6 @@ void crearArregloGrupoPartidosManipulado(GrupoPartido partidosGrupo[VALIDOS_GRUP
         {
             partidosGrupo[i].letra = grupos[i].letra;
             partidosGrupo[i].partidos = NULL;
-            ///printf("Esta en el grupo %c",grupos[i].letra);
             float probabilidad = grupos[i].equipos->equipo->probabilidad; // guardo la probabilidad
             Equipo *e = get_equipo_por_nombre(grupos[i].equipos, equipoElegido); // busco el equipo
             if (opcion == true) e->probabilidad = 1000; // modifico la probabilidad segun la opcion
@@ -826,8 +814,6 @@ void agregarPartidoConPenales(nodoPartido** lista, Equipo* eq1, Equipo* eq2, cha
 
     resultado = rand()%(probabilidadTotal+1);
 
-    //printf("======================== P %s = %d ============\n", eq1->nomEquipo, probabilidadPrimero);
-    //printf("======================== P %s = %d ============\n", eq2->nomEquipo, probabilidadSegundo);
     if (resultado < probabilidadPrimero)   //gana el primero
     {
         do
@@ -835,20 +821,6 @@ void agregarPartidoConPenales(nodoPartido** lista, Equipo* eq1, Equipo* eq2, cha
             definirGolesVictoria(&(aInsertar.golesEq1), probabilidadPrimero, &(aInsertar.golesEq2), probabilidadSegundo);
 
         }while(aInsertar.golesEq1 <= aInsertar.golesEq2);
-
-        aInsertar.penales1 = 0;
-        aInsertar.penales2 = 0;
-
-        eq1->ga = eq1->ga + aInsertar.golesEq2;
-        eq1->gf = eq1->gf + aInsertar.golesEq1;
-        eq1->mp = eq1->mp + 1;
-        eq1->win = eq1->win + 1;
-        eq1->pts = eq1->pts + 3;
-
-        eq2->ga = eq2->ga + aInsertar.golesEq1;
-        eq2->gf = eq2->gf + aInsertar.golesEq2;
-        eq2->mp = eq2->mp + 1;
-        eq2->loss = eq2->loss + 1;
     }
 
     if ((resultado >= probabilidadPrimero) && (resultado < probabilidadSegundo + probabilidadPrimero))      //gana el segundo
@@ -858,38 +830,13 @@ void agregarPartidoConPenales(nodoPartido** lista, Equipo* eq1, Equipo* eq2, cha
             definirGolesVictoria(&(aInsertar.golesEq2), probabilidadSegundo, &(aInsertar.golesEq1), probabilidadPrimero);
 
         }while(aInsertar.golesEq2 <= aInsertar.golesEq1);
-
-
-
-        eq2->ga = eq2->ga + aInsertar.golesEq1;
-        eq2->gf = eq2->gf + aInsertar.golesEq2;
-        eq2->mp = eq2->mp + 1;
-        eq2->win = eq2->win + 1;
-        eq2->pts = eq2->pts +3;
-
-        eq1->ga = eq1->ga + aInsertar.golesEq2;
-        eq1->gf = eq1->gf + aInsertar.golesEq1;
-        eq1->mp = eq1->mp + 1;
-        eq1->loss = eq1->loss + 1;
     }
 
     if (resultado >= (probabilidadSegundo + probabilidadPrimero))      //empate
     {
         resultadoDelEmpateConPenales(&(aInsertar.golesEq1),&(aInsertar.golesEq2),&(aInsertar.penales1),&(aInsertar.penales2));
-
-        eq1->ga = eq1->ga + aInsertar.golesEq1;
-        eq1->gf = eq1->gf + aInsertar.golesEq2;
-        eq1->mp = eq1->mp + 1;
-        eq1->pts = eq1->pts + 1;
-
-        eq2->ga = eq2->ga + aInsertar.golesEq1;
-        eq2->gf = eq2->gf + aInsertar.golesEq2;
-        eq2->mp = eq2->mp + 1;
-        eq2->pts = eq2->pts + 1;
     }
 
-    ///printf("%s\n",aInsertar.fecha);
-    ///printf("%s %i - %i %s\n\n",aInsertar.equipo1, aInsertar.golesEq1, aInsertar.golesEq2, aInsertar.equipo2);
 
     insertarAlFinalNodoPartido(lista,aInsertar);
 }
@@ -1153,6 +1100,8 @@ void muestraFasesFinalesConResultados(fase fases[], int i)
     i++;
     nodoPartido* auxiliarFinal;
     auxiliarFinal = fases[i].partidos;
+
+    printf("\n   OCTAVOS DE FINAL \t       CUARTOS DE FINAL  \t\t    SEMIFINAL \t\t           FINAL");
 
     printf("\n\n%14s: %i(%i)__\n",auxiliar->partido.equipo1,auxiliar->partido.golesEq1,auxiliar->partido.penales1);
     printf("%14s: %i(%i)  |\n",auxiliar->partido.equipo2,auxiliar->partido.golesEq2,auxiliar->partido.penales2);
