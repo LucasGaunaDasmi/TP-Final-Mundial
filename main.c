@@ -60,6 +60,11 @@ typedef struct GrupoPartido
    nodoPartido* partidos;
 }GrupoPartido;
 
+typedef struct fase
+{
+int idFase;
+nodoPartido* partidos;
+}fase;
 
 ///PROTOTIPADO DE FUNCIONES
 
@@ -514,9 +519,10 @@ void agregarPartido(nodoPartido** lista, Equipo* eq1, Equipo* eq2, char fechas[]
     int probabilidadEmpate;
     int probabilidadTotal;
     int resultado;
+
     if(probabilidadPrimero >= probabilidadSegundo)
     {
-        if(probabilidadPrimero > probabilidadSegundo * 12 && (probabilidadSegundo != 0) && probabilidadPrimero != 1000000)
+        if(probabilidadPrimero > probabilidadSegundo * 12 && probabilidadSegundo != 0 && probabilidadPrimero != 1000000)
         {
             probabilidadSegundo = probabilidadPrimero / 12;
         }
@@ -776,6 +782,172 @@ void print_partido(Partido *p)
     printf("%s %d - %d %s", p->equipo1->nomEquipo, p->golesEq1, p->golesEq2, p->equipo2->nomEquipo);
 }
 
+void organizarOctavos(fase fases[], Grupo grupos[], char fechas [][30])
+{
+    fases[0].idFase = 0;
+    Partido aInsertar;
+    nodoGrupoEquipo* seg;
+    nodoGrupoEquipo* seg2;
+    fases[0].partidos = NULL;
+
+    /// O1
+    seg = grupos[0].equipos;
+    seg2 = grupos[1].equipos;
+
+    aInsertar.equipo1 = seg->equipo;
+    aInsertar.equipo2 = seg2->siguiente->equipo;
+
+    int i = 0;
+    while(strcmpi(fechas[i],"NULO") == 0)
+    {
+        i++;
+    }
+
+    strcpy(aInsertar.fecha,fechas[i]);
+    strcpy(fechas[i],"NULO");
+
+    insertarAlFinalNodoPartido(&(fases[0].partidos),aInsertar);
+
+    /// O2
+    seg = grupos[2].equipos;
+    seg2 = grupos[3].equipos;
+
+    aInsertar.equipo1 = seg->equipo;
+    aInsertar.equipo2 = seg2->siguiente->equipo;
+
+    i = 0;
+    while(strcmpi(fechas[i],"NULO") == 0)
+    {
+        i++;
+    }
+
+    strcpy(aInsertar.fecha,fechas[i]);
+    strcpy(fechas[i],"NULO");
+
+    insertarAlFinalNodoPartido(&(fases[0].partidos),aInsertar);
+
+    /// O3
+    seg = grupos[4].equipos;
+    seg2 = grupos[5].equipos;
+
+    aInsertar.equipo1 = seg->equipo;
+    aInsertar.equipo2 = seg2->siguiente->equipo;
+
+    i = 0;
+    while(strcmpi(fechas[i],"NULO") == 0)
+    {
+        i++;
+    }
+
+    strcpy(aInsertar.fecha,fechas[i]);
+    strcpy(fechas[i],"NULO");
+
+    insertarAlFinalNodoPartido(&(fases[0].partidos),aInsertar);
+
+    /// O4
+    seg = grupos[6].equipos;
+    seg2 = grupos[7].equipos;
+
+    aInsertar.equipo1 = seg->equipo;
+    aInsertar.equipo2 = seg2->siguiente->equipo;
+
+    i = 0;
+    while(strcmpi(fechas[i],"NULO") == 0)
+    {
+        i++;
+    }
+
+    strcpy(aInsertar.fecha,fechas[i]);
+    strcpy(fechas[i],"NULO");
+
+    insertarAlFinalNodoPartido(&(fases[0].partidos),aInsertar);
+
+    /// O5
+    seg = grupos[1].equipos;
+    seg2 = grupos[0].equipos;
+
+    aInsertar.equipo1 = seg->equipo;
+    aInsertar.equipo2 = seg2->siguiente->equipo;
+
+    i = 0;
+    while(strcmpi(fechas[i],"NULO") == 0)
+    {
+        i++;
+    }
+
+    strcpy(aInsertar.fecha,fechas[i]);
+    strcpy(fechas[i],"NULO");
+
+    insertarAlFinalNodoPartido(&(fases[0].partidos),aInsertar);
+
+    /// O6
+    seg = grupos[3].equipos;
+    seg2 = grupos[2].equipos;
+
+    aInsertar.equipo1 = seg->equipo;
+    aInsertar.equipo2 = seg2->siguiente->equipo;
+
+    i = 0;
+    while(strcmpi(fechas[i],"NULO") == 0)
+    {
+        i++;
+    }
+
+    strcpy(aInsertar.fecha,fechas[i]);
+    strcpy(fechas[i],"NULO");
+
+    insertarAlFinalNodoPartido(&(fases[0].partidos),aInsertar);
+
+    /// O7
+    seg = grupos[5].equipos;
+    seg2 = grupos[4].equipos;
+
+    aInsertar.equipo1 = seg->equipo;
+    aInsertar.equipo2 = seg2->siguiente->equipo;
+
+    i = 0;
+    while(strcmpi(fechas[i],"NULO") == 0)
+    {
+        i++;
+    }
+
+    strcpy(aInsertar.fecha,fechas[i]);
+    strcpy(fechas[i],"NULO");
+
+    insertarAlFinalNodoPartido(&(fases[0].partidos),aInsertar);
+
+    /// O8
+    seg = grupos[7].equipos;
+    seg2 = grupos[6].equipos;
+
+    aInsertar.equipo1 = seg->equipo;
+    aInsertar.equipo2 = seg2->siguiente->equipo;
+
+    i = 0;
+    while(strcmpi(fechas[i],"NULO") == 0)
+    {
+        i++;
+    }
+
+    strcpy(aInsertar.fecha,fechas[i]);
+    strcpy(fechas[i],"NULO");
+
+    insertarAlFinalNodoPartido(&(fases[0].partidos),aInsertar);
+}
+
+void muestraOctavos(fase fases[])
+{
+    nodoPartido* seg = fases[0].partidos;
+    printf("\nCRUCES DE OCTAVOS DE FINAL\n");
+
+    for(int i = 0; i < 8; i++)
+    {
+        ///printf("\n%s\n", seg->partido.fecha);
+        printf("\n%s\n",seg->partido.equipo1);
+        printf("%s\n",seg->partido.equipo2);
+        seg = seg->siguiente;
+    }
+}
 ///MAIN
 
 int main()
@@ -786,6 +958,7 @@ int main()
     char fechas[63][30];                                                  ///ARREGLO CON TODAS LAS FECHAS EN FORMATO STRING (p.ej. "25 de noviembre 10:00")
     nodoEquipo* listaDeEquipos = NULL;                                    ///LISTA DE TODOS LOS EQUIPOS
     GrupoPartido partidosGrupo[VALIDOS_GRUPO];                            ///ARREGLO DE PARTIDOS, CADA CELDA ES UN GRUPO CON 6 PARTIDOS (LISTA)
+    fase fases[4];                                                        ///ARREGLO DE FASES
 
     /// LECTURA DE ARCHIVOS
     leerArchivo(&listaDeEquipos);
@@ -800,6 +973,10 @@ int main()
     jugarFaseDeGrupos(partidosGrupo, grupos, fechas, listaDeEquipos);
 
     /// OCTAVOS
+    organizarOctavos(fases, grupos, fechas);
+    muestraOctavos(fases);
+    printf("\n");
+    system("pause");
 
     return 0;
 }
