@@ -766,7 +766,7 @@ void resultadoDelEmpateConPenales(int* goles1, int* goles2, int* penales1, int* 
     (*penales1) = rand()%6;
     (*penales2) = rand()%6;
 
-    if((*penales1) == (*penales2))
+    while((*penales1) == (*penales2))
     {
         definicion = rand()%2;
         if(definicion == 0)
@@ -785,6 +785,8 @@ void agregarPartidoConPenales(nodoPartido** lista, Equipo* eq1, Equipo* eq2, cha
     Partido aInsertar;
     aInsertar.equipo1 = eq1;
     aInsertar.equipo2 = eq2;
+    aInsertar.penales1 = 0;
+    aInsertar.penales2 = 0;
 
     int i = 0;
     while(strcmpi(fechas[i],"NULO") == 0)
@@ -857,8 +859,7 @@ void agregarPartidoConPenales(nodoPartido** lista, Equipo* eq1, Equipo* eq2, cha
 
         }while(aInsertar.golesEq2 <= aInsertar.golesEq1);
 
-        aInsertar.penales1 = 0;
-        aInsertar.penales1 = 0;
+
 
         eq2->ga = eq2->ga + aInsertar.golesEq1;
         eq2->gf = eq2->gf + aInsertar.golesEq2;
@@ -967,7 +968,7 @@ Equipo* ganadorLlave(nodoPartido* partidos)
         }
         else
         {
-            return partidos->partido.equipo1;
+            return partidos->partido.equipo2;
         }
     }
 }
@@ -1185,7 +1186,7 @@ void muestraFasesFinalesConResultados(fase fases[], int i)
     printf("%14s: %i(%i)                                                                    |\n",auxiliar->partido.equipo2,auxiliar->partido.golesEq2,auxiliar->partido.penales2);
     printf("                                                                                        |%14s: %i(%i)\n",auxiliarFinal->partido.equipo1,auxiliarFinal->partido.golesEq1,auxiliarFinal->partido.penales1);
     printf("                                                                                        |------\n");
-    printf("                                                                                        |%14s: %i(%i)",auxiliarFinal->partido.equipo2,auxiliarFinal->partido.golesEq2,auxiliarFinal->partido.penales1);
+    printf("                                                                                        |%14s: %i(%i)",auxiliarFinal->partido.equipo2,auxiliarFinal->partido.golesEq2,auxiliarFinal->partido.penales2);
 
 
 
