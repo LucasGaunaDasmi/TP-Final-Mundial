@@ -7,6 +7,7 @@
 #include <Windows.h>
 #define VALIDOS_GRUPO 8
 
+
 #define UP_KEY 72
 #define DOWN_KEY 80
 #define LEFT_KEY 75
@@ -16,7 +17,7 @@
 #define ESC_KEY 27
 
 #define DEFAULT_COLOR 7
-#define HOVER_COLOR 127
+#define HOVER_COLOR 120
 #define SELECTED_COLOR 14
 
 #define clear() printf("\033[H\033[J")
@@ -1154,8 +1155,7 @@ void load_menus() {
     strcpy(menus[2].opciones[4], "Salir");
     menus[3].cantOpciones = 3;
     strcpy(menus[3].opciones[0], "Buscar partidos de un equipo");
-    strcpy(menus[3].opciones[1], "Buscar partidos entre dos equipos");
-    strcpy(menus[3].opciones[2], "Volver");
+    strcpy(menus[3].opciones[1], "Volver");
     printf("Menus cargados\n");
 }
 
@@ -1175,6 +1175,8 @@ void print_menu(menu m, int option) {
 }
 
 char charGrupos[8] = {'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H'};
+
+
 
 void mostrarTablaGrupo(Grupo g) {
     printf("----------------------------------------------------------------------------\n");
@@ -1273,14 +1275,13 @@ int getGrupoDeEquipo(char* equipo, Grupo grupos[8]) {
     return -1;
 }
 
-char* get_equipo(nodoEquipo *listaDeEquipos) {
+char* get_equipo(nodoEquipo *listaDeEquipos, char *mensaje) {
     bool flag = true;
     char *equipoElegido;
-    printf("Ingrese el equipo: ");
+    printf("%s", mensaje);
     fflush(stdin);
     showcursor();
     gets(equipoElegido);
-    hidecursor();
     flag = existeEquipo(equipoElegido, listaDeEquipos);
     while(!flag)
     {
@@ -1289,15 +1290,17 @@ char* get_equipo(nodoEquipo *listaDeEquipos) {
         gets(equipoElegido);
         flag = existeEquipo(equipoElegido, listaDeEquipos);
     }
+    hidecursor();
     return equipoElegido;
 }
 
 void printPartidosDeEquipo(Grupo grupos[8], GrupoPartido *partidosGrupo, fase fases[4], nodoEquipo *listaDeEquipos) {
     char equipoElegido[30];
     printf("copiando equipo\n"); clrscr();
-    strcpy(equipoElegido, get_equipo(listaDeEquipos));
+    strcpy(equipoElegido, get_equipo(listaDeEquipos, "Ingrese el equipo: "));
     int grupo = getGrupoDeEquipo(equipoElegido, grupos);
     nodoPartido *aux = partidosGrupo[grupo].partidos;
+    clrscr();
     while (aux != NULL) {
         if (strcmpi(aux->partido.equipo1->nomEquipo, equipoElegido) == 0 || strcmpi(aux->partido.equipo2->nomEquipo, equipoElegido) == 0) {
             printf("Fase de grupos\n");
@@ -1318,13 +1321,6 @@ void printPartidosDeEquipo(Grupo grupos[8], GrupoPartido *partidosGrupo, fase fa
     }
 }
 
-void volver_button() { // boton para volver al menu anterior
-    back_color(HOVER_COLOR);
-    printf("Volver");
-    back_color(DEFAULT_COLOR);
-    while (getch() != ENTER_KEY);
-}
-
 void print_title() {
     printf("   _____ _                 _           _                  _                                  _ _       _ \n");
     printf("  / ____(_)               | |         | |                | |                                | (_)     | |\n");
@@ -1335,10 +1331,8 @@ void print_title() {
     printf("\n");
 }
 
-///MAIN
-int main()
-{
-    srand(time(NULL));
+void main_menu() {
+    
     Grupo grupos[VALIDOS_GRUPO];                                          ///ARREGLO DE CADA GRUPO (TIENE UNA LETRA Y UNA LISTA DE 4 PUNTEROS A EQUIPOS)
     char fechas[63][30];                                                  ///ARREGLO CON TODAS LAS FECHAS EN FORMATO STRING (p.ej. "25 de noviembre 10:00")
     nodoEquipo* listaDeEquipos = NULL;                                    ///LISTA DE TODOS LOS EQUIPOS
@@ -1355,7 +1349,6 @@ int main()
 
     // INICIO DE MENU
     load_menus();
-    hidecursor();
     clrscr();
     bool go = true;
     int SelectedMenu = 0;
@@ -1396,7 +1389,7 @@ int main()
                                 SelectedMenu = 2;
                                 break;
                             case 1: // Generar fase de grupos manipulada
-                                strcpy(equipoElegido, get_equipo(listaDeEquipos));
+                                strcpy(equipoElegido, get_equipo(listaDeEquipos, "Ingrese el equipo a modificar: "));
                                 clrscr();
                                 SelectedMenu = 1;
                                 SelectedOption = 0;
@@ -1447,6 +1440,7 @@ int main()
                                 mostrarPartidosGrupos(partidosGrupo);
                                 break;
                             case 3: // buscar partidos
+                                SelectedOption = 0;
                                 SelectedMenu = 3;
                                 break;
                             case 4: // cerrar
@@ -1458,18 +1452,15 @@ int main()
                         clrscr();
                         switch (SelectedOption) {
                             case 0: // buscar por equipo
-                                clrscr();
                                 listaDeEquipos = NULL;
                                 leerArchivo(&listaDeEquipos);
                                 printPartidosDeEquipo(grupos, partidosGrupo, fases, listaDeEquipos);
-                                volver_button();
+                                printf("\nESC para volver");
+                                while (getch() != ESC_KEY);
                                 clrscr();
                                 break;
-                            case 1: // buscar por dos equipos
-                                // buscarPartidosPorEquipo(partidosGrupo);
-                                break;
-                            case 2: // volver
-                                SelectedMenu = 3;
+                            case 1: // volver
+                                SelectedMenu = 2;
                                 break;
                         }
                         break;
@@ -1480,7 +1471,13 @@ int main()
                 break;
         }
     }
+}
 
-
+///MAIN
+int main()
+{
+    srand(time(NULL));
+    hidecursor();
+    main_menu();
     return 0;
 }
