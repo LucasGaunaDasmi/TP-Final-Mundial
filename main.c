@@ -6,6 +6,7 @@
 #include <conio.h>
 #include <Windows.h>
 #define VALIDOS_GRUPO 8
+#define MAX_OPTION_LEN 40
 
 
 #define UP_KEY 72
@@ -23,10 +24,12 @@
 #define clear() printf("\033[H\033[J")
 #define gotoxy(x,y) printf("\033[%d;%dH", (y), (x))
 
-int back_color(int num) {
+int back_color(int num)
+{
     SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE), num);
     return 0;
 }
+
 
 ///ESTRUCTURAS
 
@@ -89,6 +92,13 @@ int idFase;
 nodoPartido* partidos;
 }fase;
 
+typedef struct menu
+{
+    char opciones[5][MAX_OPTION_LEN];
+    int cantOpciones;
+} menu;
+
+
 ///PROTOTIPADO DE FUNCIONES
 
 /// LECTURA DE ARCHIVOS
@@ -147,7 +157,50 @@ Equipo* get_equipo_por_nombre(nodoGrupoEquipo*, char*);                         
 
 void crearArregloGrupoPartidosManipulado(GrupoPartido*, Grupo*, char*, bool, char[][30]);         ///LLAMA A LAS FUNCIONES NECESARIAS, EL GRUPO DEL EQ SELECCIONADO SE MAINPULA, LOS DEMAS SON RANDOM (CON PROB)
 
-void jugarFaseDeGrupos(GrupoPartido*, Grupo* , char [][30], nodoEquipo*, fase[]);                 ///FUNCION PRINICIPAL DE LA FASE DE GRUPOS
+void muestraClasificados(fase[]);                                                                 ///MUESTRA A LAS SELECCIONES CLASIFICADAS A OCTAVOS
+
+void resultadoDelEmpateConPenales(int*, int*, int*, int*);                                        ///DEFINE EL RESULTADO DEL PARTIDO EN CASO DE EMPATE, AGREGANDO PENALES POR SER FASE DE ELIMINACION
+
+void agregarPartidoConPenales(nodoPartido**, Equipo*, Equipo*, char[][30]);                       ///FUNCION QUE AGREGA UN PARTIDO DE FASE DE ELIMINACION DIRECTA
+
+void organizarOctavos(fase[], Grupo[], char[][30]);                                               ///ORGANIZA LOS CRUCES DE OCTAVOS DE FINAL
+
+Equipo* ganadorLlave(nodoPartido*);                                                               ///DEVUELVE UN PUNTERO AL EQUIPO QUE GANO UNA FASE
+
+void organizarCuartos(fase[], char[][30]);                                                        ///ORGANIZA LOS CRUCES DE CUARTOS DE FINAL
+
+void organizarSemis(fase[], char[][30]);                                                          ///ORGANIZA LOS CRUCES DE SEMIFINALES
+
+void organizarFinal(fase[], char[][30]);                                                          ///ORGANIZA LOS EQUIPOS GANADORES DE SEMIS EN LA FINAL
+
+void print_partido(Partido*);                                                                     ///IMPRIME UN PARTIDO CON SU FECHA EN PANTALLA
+
+
+///FUNCIONES MAIN
+
+void clrscr();                                                                                    ///LIMPIA LA PANTALLA
+
+void hidecursor();                                                                                ///ESCONDE EL CURSOR DE LA CONSOLA
+
+void showcursor();                                                                                ///HACE REAPARECER EL CURSOR DE LA CONSOLA
+
+void load_menus();                                                                                ///CARGA LOS MENUS EN MEMORIA    
+
+void print_menu(menu, int);                                                                       ///IMPRIME LAS OPCIONES DEL MENU EN PANTALLA Y RESALTA LA OPCION SELECCIONADA
+
+void mostrarTablaGrupo(Grupo);                                                                    ///MUESTRA LA TABLA DE POSICIONES DE TODOS LOS GRUPOS
+
+void mostrarTablasGrupos(Grupo[8]);                                                               ///MUESTRA LAS TABLAS DE POSICIONES DE UN GRUPO
+
+void mostrarPartidosGrupos(GrupoPartido[8]);                                                      ///MUESTRA LOS PARTIDOS DE UN GRUPO
+
+char get_equipo(nodoEquipo);                                                                      ///DEVUELVE UN EQUIPO INGRESADO POR EL USUARIO QUE EXISTA EN EL MUNDIAL
+
+void print_title();                                                                               ///IMPRIME EL TITULO DEL PROGRAMA
+
+void print_partidos(Grupo);                                                                       ///IMPRIME LOS PARTIDOS DE UN GRUPO
+
+void volver_button();                                                                              ///BOTON PARA VOLVER AL MENU ANTERIOR
 
 
 ///IMPLEMENTACION DE FUNCIONES
@@ -1099,27 +1152,23 @@ void print_partido(Partido *p)
     printf("%s %d - %d %s\n\n", p->equipo1->nomEquipo, p->golesEq1, p->golesEq2, p->equipo2->nomEquipo);
 }
 
-void clrscr() {
+void clrscr()
+{
     system("@cls||clear");
 }
 
-#define MAX_OPTION_LEN 40
-
-typedef struct {
-    char opciones[5][MAX_OPTION_LEN];
-    int cantOpciones;
-} menu;
-
 menu menus[6];
-char nomMenu[4][40] = {
+
+char nomMenu[4][40] =
+{
     "Generador de partidos",
     "Generador de grupos manipulados",
     "Resultados finales generados",
     "Buscar partido"
 };
 
-
-void hidecursor() { // esconde el cursor de la consola
+void hidecursor()
+{
     HANDLE consoleHandle = GetStdHandle(STD_OUTPUT_HANDLE);
     CONSOLE_CURSOR_INFO info;
     info.dwSize = 100;
@@ -1127,7 +1176,8 @@ void hidecursor() { // esconde el cursor de la consola
     SetConsoleCursorInfo(consoleHandle, &info);
 }
 
-void showcursor() { // reaparece el cursor de la consola
+void showcursor()
+{ 
     HANDLE consoleHandle = GetStdHandle(STD_OUTPUT_HANDLE);
     CONSOLE_CURSOR_INFO info;
     info.dwSize = 100;
@@ -1135,10 +1185,11 @@ void showcursor() { // reaparece el cursor de la consola
     SetConsoleCursorInfo(consoleHandle, &info);
 }
 
-void load_menus() {
+void load_menus()
+{
     printf("Cargando menu 0...\n");
     // carga de menu 0
-    menus[0].cantOpciones = 3; 
+    menus[0].cantOpciones = 3;
     strcpy(menus[0].opciones[0], "Generar partidos por azar");
     strcpy(menus[0].opciones[1], "Generar partidos manipulados");
     strcpy(menus[0].opciones[2], "Salir");
@@ -1159,8 +1210,10 @@ void load_menus() {
     printf("Menus cargados\n");
 }
 
-///MAIN
-void print_menu(menu m, int option) {
+
+///FUNCIONES MAIN
+void print_menu(menu m, int option)
+{
     for (int i = 0; i < m.cantOpciones; i++) {
         if (i == option) {
             back_color(HOVER_COLOR);
@@ -1176,7 +1229,8 @@ void print_menu(menu m, int option) {
 
 char charGrupos[8] = {'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H'};
 
-void mostrarTablaGrupo(Grupo g) {
+void mostrarTablaGrupo(Grupo g)
+{
     printf("----------------------------------------------------------------------------\n");
     printf("GRUPO %c\n", g.letra);
     printf("\t\tMP\tW\tD\tL\tGF\tGA\tGD\tPts\n");
@@ -1204,7 +1258,8 @@ void mostrarTablaGrupo(Grupo g) {
     }
 }
 
-void mostrarTablasGrupos(Grupo grupos[8]) {
+void mostrarTablasGrupos(Grupo grupos[8])
+{
     bool go = true;
     int grupo = 0;
     while (go) {
@@ -1229,7 +1284,8 @@ void mostrarTablasGrupos(Grupo grupos[8]) {
     }
 }
 
-void mostrarPartidosGrupos(GrupoPartido partidos[8]) {
+void mostrarPartidosGrupos(GrupoPartido partidos[8])
+{
     bool go = true;
     int grupo = 0;
     while (go) {
@@ -1260,7 +1316,8 @@ void mostrarPartidosGrupos(GrupoPartido partidos[8]) {
     }
 }
 
-int getGrupoDeEquipo(char* equipo, Grupo grupos[8]) {
+int getGrupoDeEquipo(char* equipo, Grupo grupos[8])
+{
     for (int i = 0; i < 8; i++) {
         nodoGrupoEquipo *aux = grupos[i].equipos;
         while (aux != NULL) {
@@ -1273,7 +1330,8 @@ int getGrupoDeEquipo(char* equipo, Grupo grupos[8]) {
     return -1;
 }
 
-char* get_equipo(nodoEquipo *listaDeEquipos) {
+char* get_equipo(nodoEquipo *listaDeEquipos)
+{
     bool flag = true;
     char *equipoElegido;
     printf("Ingrese el equipo: ");
@@ -1292,7 +1350,8 @@ char* get_equipo(nodoEquipo *listaDeEquipos) {
     return equipoElegido;
 }
 
-void printPartidosDeEquipo(Grupo grupos[8], GrupoPartido *partidosGrupo, fase fases[4], nodoEquipo *listaDeEquipos) {
+void printPartidosDeEquipo(Grupo grupos[8], GrupoPartido *partidosGrupo, fase fases[4], nodoEquipo *listaDeEquipos)
+{
     char equipoElegido[30];
     printf("copiando equipo\n"); clrscr();
     strcpy(equipoElegido, get_equipo(listaDeEquipos));
@@ -1318,14 +1377,16 @@ void printPartidosDeEquipo(Grupo grupos[8], GrupoPartido *partidosGrupo, fase fa
     }
 }
 
-void volver_button() { // boton para volver al menu anterior
+void volver_button()
+{
     back_color(HOVER_COLOR);
     printf("Volver");
     back_color(DEFAULT_COLOR);
     while (getch() != ENTER_KEY);
 }
 
-void print_title() {
+void print_title()
+{
     printf("   _____ _                 _           _                  _                                  _ _       _ \n");
     printf("  / ____(_)               | |         | |                | |                                | (_)     | |\n");
     printf(" | (___  _ _ __ ___  _   _| | __ _  __| | ___  _ __    __| | ___   _ __ ___  _   _ _ __   __| |_  __ _| |\n");
@@ -1335,8 +1396,9 @@ void print_title() {
     printf("\n");
 }
 
-void main_menu() {
-    
+void main_menu()
+{
+
     Grupo grupos[VALIDOS_GRUPO];                                          ///ARREGLO DE CADA GRUPO (TIENE UNA LETRA Y UNA LISTA DE 4 PUNTEROS A EQUIPOS)
     char fechas[63][30];                                                  ///ARREGLO CON TODAS LAS FECHAS EN FORMATO STRING (p.ej. "25 de noviembre 10:00")
     nodoEquipo* listaDeEquipos = NULL;                                    ///LISTA DE TODOS LOS EQUIPOS
@@ -1364,7 +1426,7 @@ void main_menu() {
         menu m = menus[SelectedMenu];
         print_title();
         printf("%s", nomMenu[SelectedMenu]); printf("\n\n");
-        if (SelectedMenu == 1) printf("Equipo seleccionado: %s\n", equipoElegido); 
+        if (SelectedMenu == 1) printf("Equipo seleccionado: %s\n", equipoElegido);
         print_menu(m, SelectedOption);
         int c = getch();
         switch (c) {
