@@ -3,7 +3,29 @@
 #include <string.h>
 #include <time.h>
 #include <stdbool.h>
+#include <conio.h>
+#include <Windows.h>
 #define VALIDOS_GRUPO 8
+
+#define UP_KEY 72
+#define DOWN_KEY 80
+#define LEFT_KEY 75
+#define RIGHT_KEY 77
+#define ENTER_KEY 13
+#define X_KEY 120
+#define ESC_KEY 27
+
+#define DEFAULT_COLOR 7
+#define HOVER_COLOR 127
+#define SELECTED_COLOR 14
+
+#define clear() printf("\033[H\033[J")
+#define gotoxy(x,y) printf("\033[%d;%dH", (y), (x))
+
+int back_color(int num) {
+    SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE), num);
+    return 0;
+}
 
 ///ESTRUCTURAS
 
@@ -60,6 +82,11 @@ typedef struct GrupoPartido
    nodoPartido* partidos;
 }GrupoPartido;
 
+typedef struct fase
+{
+int idFase;
+nodoPartido* partidos;
+}fase;
 
 ///PROTOTIPADO DE FUNCIONES
 
@@ -85,7 +112,7 @@ void cargarGrupos(Grupo*, int, nodoEquipo*);                                    
 
 void mostrarGrupos(Grupo*, int);                                                                  ///MUESTRA (DESPUES TENDRIAMOS QUE HACER UNA PARA MOSTRAR LAS POSICIONES EN ORDEN)
 
-/// FASE DE GRUPOS
+/// SIMULADOR
 
 int existeEquipo(char*, nodoEquipo*);                                                             ///VERIFICA SI UN EQUIPO(STRING) ESTA EN LA LISTA DE EQUIPOS
 
@@ -119,9 +146,7 @@ Equipo* get_equipo_por_nombre(nodoGrupoEquipo*, char*);                         
 
 void crearArregloGrupoPartidosManipulado(GrupoPartido*, Grupo*, char*, bool, char[][30]);         ///LLAMA A LAS FUNCIONES NECESARIAS, EL GRUPO DEL EQ SELECCIONADO SE MAINPULA, LOS DEMAS SON RANDOM (CON PROB)
 
-void jugarFaseDeGrupos(GrupoPartido*, Grupo* , char [][30], nodoEquipo*);                         ///FUNCION PRINICIPAL DE LA FASE DE GRUPOS
-
-void print_partido(Partido*);                                                                     ///IMPRIME LOS RESULTADOS DE UN PARTIDO
+void jugarFaseDeGrupos(GrupoPartido*, Grupo* , char [][30], nodoEquipo*, fase[]);                 ///FUNCION PRINICIPAL DE LA FASE DE GRUPOS
 
 
 ///IMPLEMENTACION DE FUNCIONES
@@ -283,7 +308,7 @@ void mostrarGrupos(Grupo* grupos, int validos)
     }
 }
 
-/// FASE DE GRUPOS
+/// SIMULADOR
 
 int existeEquipo(char* nombreBuscado, nodoEquipo* listaDeEquipos)
 {
@@ -314,10 +339,25 @@ nodoPartido* crearNodoPartido(Partido aInsertar)
 }
 
 void insertarAlFinalNodoPartido(nodoPartido** lista,Partido aInsertar)
-{// recursiva
-    printf("insertando %s", aInsertar.equipo1);  
-    if (*lista != NULL) insertarAlFinalNodoPartido(&(*lista)->siguiente,aInsertar);
-    else *lista = crearNodoPartido(aInsertar);
+{
+    nodoPartido* nuevo = crearNodoPartido(aInsertar);
+    nodoPartido* seg;
+
+    if(*lista == NULL)
+    {
+        (*lista) = nuevo;
+    }
+    else
+    {
+        seg = *lista;
+
+        while(seg->siguiente != NULL)
+        {
+            seg = seg->siguiente;
+        }
+
+        seg->siguiente = nuevo;
+    }
 }
 
 Equipo* getEquipo(nodoGrupoEquipo* grupo, int indexEquipo)
@@ -499,9 +539,10 @@ void agregarPartido(nodoPartido** lista, Equipo* eq1, Equipo* eq2, char fechas[]
     int probabilidadEmpate;
     int probabilidadTotal;
     int resultado;
+
     if(probabilidadPrimero >= probabilidadSegundo)
     {
-        if(probabilidadPrimero > probabilidadSegundo * 12 && (probabilidadSegundo != 0) && probabilidadPrimero != 1000000)
+        if(probabilidadPrimero > probabilidadSegundo * 12 && probabilidadSegundo != 0 && probabilidadPrimero != 1000000)
         {
             probabilidadSegundo = probabilidadPrimero / 12;
         }
@@ -522,8 +563,6 @@ void agregarPartido(nodoPartido** lista, Equipo* eq1, Equipo* eq2, char fechas[]
 
     resultado = rand()%(probabilidadTotal+1);
 
-    //printf("======================== P %s = %d ============\n", eq1->nomEquipo, probabilidadPrimero);
-    //printf("======================== P %s = %d ============\n", eq2->nomEquipo, probabilidadSegundo);
     if (resultado < probabilidadPrimero)   //gana el primero
     {
         do
@@ -579,28 +618,17 @@ void agregarPartido(nodoPartido** lista, Equipo* eq1, Equipo* eq2, char fechas[]
         eq2->pts = eq2->pts + 1;
     }
 
-    printf("%s\n",aInsertar.fecha);
-    printf("%s %i - %i %s\n\n",aInsertar.equipo1, aInsertar.golesEq1, aInsertar.golesEq2, aInsertar.equipo2);
-
     insertarAlFinalNodoPartido(lista,aInsertar);
 }
 
 void cargarPartidosGrupos(nodoPartido** lista, Grupo grupo, char fechas[63][30])
 {
-    printf("Resultados grupo %c:\n\n",grupo.letra);
-    /*printf("%s vs %s\n", getEquipo(grupo.equipos, 0), getEquipo(grupo.equipos, 1));
-    printf("%s vs %s\n", getEquipo(grupo.equipos, 2), getEquipo(grupo.equipos, 3));
-    printf("%s vs %s\n", getEquipo(grupo.equipos, 0), getEquipo(grupo.equipos, 2));
-    printf("%s vs %s\n", getEquipo(grupo.equipos, 3), getEquipo(grupo.equipos, 1));
-    printf("%s vs %s\n", getEquipo(grupo.equipos, 1), getEquipo(grupo.equipos, 2));
-    printf("%s vs %s\n", getEquipo(grupo.equipos, 3), getEquipo(grupo.equipos, 0));*/
     agregarPartido(lista, getEquipo(grupo.equipos, 0), getEquipo(grupo.equipos, 1), fechas);
     agregarPartido(lista, getEquipo(grupo.equipos, 2), getEquipo(grupo.equipos, 3), fechas);
     agregarPartido(lista, getEquipo(grupo.equipos, 0), getEquipo(grupo.equipos, 2), fechas);
     agregarPartido(lista, getEquipo(grupo.equipos, 3), getEquipo(grupo.equipos, 1), fechas);
     agregarPartido(lista, getEquipo(grupo.equipos, 1), getEquipo(grupo.equipos, 2), fechas);
     agregarPartido(lista, getEquipo(grupo.equipos, 3), getEquipo(grupo.equipos, 0), fechas);
-    printf("\n");
 }
 
 bool comparar_puntos(Equipo *a, Equipo *b)
@@ -651,7 +679,7 @@ void crearArregloGrupoPartidosRandom(GrupoPartido* partidosGrupo, Grupo* grupos,
     {
         partidosGrupo[i].letra = grupos[i].letra;
         partidosGrupo[i].partidos = NULL;
-        cargarPartidosGrupos(&(partidosGrupo->partidos), grupos[i], fechas);
+        cargarPartidosGrupos(&(partidosGrupo[i].partidos), grupos[i], fechas);
         ordenar_grupo_por_puntos(&grupos[i].equipos);
     }
 }
@@ -672,105 +700,650 @@ void crearArregloGrupoPartidosManipulado(GrupoPartido partidosGrupo[VALIDOS_GRUP
         {
             partidosGrupo[i].letra = grupos[i].letra;
             partidosGrupo[i].partidos = NULL;
-            cargarPartidosGrupos(&(partidosGrupo->partidos), grupos[i], fechas);
+            cargarPartidosGrupos(&(partidosGrupo[i].partidos), grupos[i], fechas);
             ordenar_grupo_por_puntos(&grupos[i].equipos);
         }
         else
         {
             partidosGrupo[i].letra = grupos[i].letra;
             partidosGrupo[i].partidos = NULL;
-            ///printf("Esta en el grupo %c",grupos[i].letra);
             float probabilidad = grupos[i].equipos->equipo->probabilidad; // guardo la probabilidad
             Equipo *e = get_equipo_por_nombre(grupos[i].equipos, equipoElegido); // busco el equipo
             if (opcion == true) e->probabilidad = 1000; // modifico la probabilidad segun la opcion
             if (opcion == false) e->probabilidad = 0;
-            cargarPartidosGrupos(&(partidosGrupo->partidos), grupos[i], fechas); // cargo los equipos con la probabilidad modificada
+            cargarPartidosGrupos(&(partidosGrupo[i].partidos), grupos[i], fechas); // cargo los equipos con la probabilidad modificada
             e->probabilidad = probabilidad; // vuelvo a poner la probabilidad original
             ordenar_grupo_por_puntos(&grupos[i].equipos);
         }
     }
 }
 
-void jugarFaseDeGrupos(GrupoPartido* partidosGrupo, Grupo* grupos, char fechas[][30], nodoEquipo* listaDeEquipos)
+void muestraClasificados(fase fases[])
 {
-    int opcion;
-    int opcion2;
-    bool opc2;
-    int flag;
-    char equipoElegido[20];
+    nodoPartido* seg = fases[0].partidos;
+    printf("CLASIFICADOS A OCTAVOS DE FINAL:\n\n");
 
-    printf("Seleccione una opcion:\n");
-    printf("1) Decidir todos los resultados por probabilidad.\n");
-    printf("2) Elegir el resultado de un equipo.\n");
-    fflush(stdin);
-    scanf("%i",&opcion);
-    while(opcion != 1 && opcion !=2)
+    for(int i = 0; i < 8; i++)
     {
-        printf("\nOpcion incorrecta, vuelva a intentarlo.\n");
-        fflush(stdin);
-        scanf("%i",&opcion);
+        printf("%s vs.",seg->partido.equipo1);
+        printf("%s\n",seg->partido.equipo2);
+        seg = seg->siguiente;
     }
-    switch(opcion)
+}
+
+void resultadoDelEmpateConPenales(int* goles1, int* goles2, int* penales1, int* penales2)
+{
+    int numeroRandom;
+    numeroRandom = rand()%101;
+
+    if(numeroRandom <= 30)
     {
-    case 1:/// OPCION TODO RANDOM
-        system("cls");
-        crearArregloGrupoPartidosRandom(partidosGrupo, grupos, fechas);
-        ///mostrarResultadosPartidosGrupos(partidosGrupo);
-        printf("\nPOSICIONES FINALES:\n");
-        mostrarGrupos(grupos, VALIDOS_GRUPO);
-        break;
+         (*goles1) = 0;
+         (*goles2) = 0;
+    }
+    if(30 < numeroRandom && numeroRandom <= 70)
+    {
+        (*goles1) = 1;
+        (*goles2) = 1;
+    }
+    if(70 < numeroRandom && numeroRandom <= 95)
+    {
+        (*goles1) = 2;
+        (*goles2) = 2;
+    }
+    if(95 < numeroRandom)
+    {
+        (*goles1) = 3;
+        (*goles2) = 3;
+    }
 
-    case 2:/// OPCION ELEGIR UN EQUIPO Y SU RESULTADO
-        printf("\nElija el equipo: ");
-        fflush(stdin);
-        gets(equipoElegido);
-        flag = existeEquipo(equipoElegido, listaDeEquipos);
+    int definicion;
+    (*penales1) = rand()%6;
+    (*penales2) = rand()%6;
 
-        while(flag == 0)
+    while((*penales1) == (*penales2))
+    {
+        definicion = rand()%2;
+        if(definicion == 0)
         {
-            printf("El equipo no existe, vuelva a intentarlo: ");
-            fflush(stdin);
-            gets(equipoElegido);
-            flag = existeEquipo(equipoElegido, listaDeEquipos);
+            (*penales1)++;
+        }
+        else
+        {
+            (*penales2)++;
+        }
+    }
+}
+
+void agregarPartidoConPenales(nodoPartido** lista, Equipo* eq1, Equipo* eq2, char fechas[][30])
+{
+    Partido aInsertar;
+    aInsertar.equipo1 = eq1;
+    aInsertar.equipo2 = eq2;
+    aInsertar.penales1 = 0;
+    aInsertar.penales2 = 0;
+
+    int i = 0;
+    while(strcmpi(fechas[i],"NULO") == 0)
+    {
+        i++;
+    }
+
+    strcpy(aInsertar.fecha,fechas[i]);
+    strcpy(fechas[i],"NULO");
+
+    int probabilidadPrimero = eq1->probabilidad * 1000;
+    int probabilidadSegundo = eq2->probabilidad * 1000;
+    int probabilidadEmpate;
+    int probabilidadTotal;
+    int resultado;
+
+    if(probabilidadPrimero >= probabilidadSegundo)
+    {
+        if(probabilidadPrimero > probabilidadSegundo * 12 && probabilidadSegundo != 0 && probabilidadPrimero != 1000000)
+        {
+            probabilidadSegundo = probabilidadPrimero / 12;
         }
 
-        printf("\nSeleccione una opcion:\n");
-        printf("1) Clasifica.\n");
-        printf("2) No clasifica.\n");
-        fflush(stdin);
-        scanf("%i",&opcion2);
-
-        while(opcion2 != 1 && opcion2 !=2)
-        {
-            printf("\nOpcion incorrecta, vuelva a intentarlo.\n");
-            fflush(stdin);
-            scanf("%i", &opcion2);
-        }
-        if (opcion2 == 1) opc2 = true; // true
-        if (opcion2 == 2) opc2 = false; // false
-        system("cls");
-        crearArregloGrupoPartidosManipulado(partidosGrupo, grupos, equipoElegido, opc2, fechas);  ///OPCION ELEGIR RESULTADO (1= clasifica) (2= no clasifica)
-        mostrarGrupos(grupos, VALIDOS_GRUPO);
-        break;
+        probabilidadEmpate = probabilidadSegundo * 1.6;
     }
+    else
+    {
+        if(probabilidadSegundo > probabilidadPrimero * 12 && (probabilidadPrimero != 0) && probabilidadSegundo != 1000000)
+        {
+            probabilidadPrimero = probabilidadSegundo / 12;
+        }
+
+        probabilidadEmpate = probabilidadPrimero * 1.6;
+    }
+
+    probabilidadTotal = probabilidadEmpate + probabilidadPrimero + probabilidadSegundo;
+
+    resultado = rand()%(probabilidadTotal+1);
+
+    if (resultado < probabilidadPrimero)   //gana el primero
+    {
+        do
+        {
+            definirGolesVictoria(&(aInsertar.golesEq1), probabilidadPrimero, &(aInsertar.golesEq2), probabilidadSegundo);
+
+        }while(aInsertar.golesEq1 <= aInsertar.golesEq2);
+    }
+
+    if ((resultado >= probabilidadPrimero) && (resultado < probabilidadSegundo + probabilidadPrimero))      //gana el segundo
+    {
+        do
+        {
+            definirGolesVictoria(&(aInsertar.golesEq2), probabilidadSegundo, &(aInsertar.golesEq1), probabilidadPrimero);
+
+        }while(aInsertar.golesEq2 <= aInsertar.golesEq1);
+    }
+
+    if (resultado >= (probabilidadSegundo + probabilidadPrimero))      //empate
+    {
+        resultadoDelEmpateConPenales(&(aInsertar.golesEq1),&(aInsertar.golesEq2),&(aInsertar.penales1),&(aInsertar.penales2));
+    }
+
+
+    insertarAlFinalNodoPartido(lista,aInsertar);
+}
+
+void organizarOctavos(fase fases[], Grupo grupos[], char fechas [][30])
+{
+    fases[0].idFase = 0;
+    Equipo *seg;
+    Equipo *seg2;
+    fases[0].partidos = NULL;
+
+    /// O1
+    seg = grupos[0].equipos->equipo;
+    seg2 = grupos[1].equipos->siguiente->equipo;
+
+    agregarPartidoConPenales(&(fases[0].partidos), seg, seg2, fechas);
+
+    /// O2
+    seg = grupos[2].equipos->equipo;
+    seg2 = grupos[3].equipos->siguiente->equipo;
+
+    agregarPartidoConPenales(&(fases[0].partidos), seg, seg2, fechas);
+
+    /// O3
+    seg = grupos[4].equipos->equipo;
+    seg2 = grupos[5].equipos->siguiente->equipo;
+
+    agregarPartidoConPenales(&(fases[0].partidos), seg, seg2, fechas);
+
+    /// O4
+    seg = grupos[6].equipos->equipo;
+    seg2 = grupos[7].equipos->siguiente->equipo;
+
+    agregarPartidoConPenales(&(fases[0].partidos), seg, seg2, fechas);
+
+    /// O5
+    seg = grupos[1].equipos->equipo;
+    seg2 = grupos[0].equipos->siguiente->equipo;
+
+    agregarPartidoConPenales(&(fases[0].partidos), seg, seg2, fechas);
+
+    /// O6
+    seg = grupos[3].equipos->equipo;
+    seg2 = grupos[2].equipos->siguiente->equipo;
+
+    agregarPartidoConPenales(&(fases[0].partidos), seg, seg2, fechas);
+
+    /// O7
+    seg = grupos[5].equipos->equipo;
+    seg2 = grupos[4].equipos->siguiente->equipo;
+
+    agregarPartidoConPenales(&(fases[0].partidos), seg, seg2, fechas);
+
+    /// O8
+    seg = grupos[7].equipos->equipo;
+    seg2 = grupos[6].equipos->siguiente->equipo;
+
+    agregarPartidoConPenales(&(fases[0].partidos), seg, seg2, fechas);
+}
+
+Equipo* ganadorLlave(nodoPartido* partidos)
+{
+    if(partidos->partido.golesEq1 > partidos->partido.golesEq2)
+    {
+        return partidos->partido.equipo1;
+    }
+    if(partidos->partido.golesEq1 < partidos->partido.golesEq2)
+    {
+        return partidos->partido.equipo2;
+    }
+    if(partidos->partido.golesEq1 == partidos->partido.golesEq2)
+    {
+        if(partidos->partido.penales1 > partidos->partido.penales2)
+        {
+            return partidos->partido.equipo1;
+        }
+        else
+        {
+            return partidos->partido.equipo2;
+        }
+    }
+}
+
+void organizarCuartos(fase fases[], char fechas [][30])
+{
+    fases[1].idFase = 1;
+    fases[1].partidos = NULL;
+    nodoPartido* seg = fases[0].partidos;
+
+    ///C1 O1vsO2
+
+    Equipo* eq1 = ganadorLlave(seg);
+    seg = seg->siguiente;
+    Equipo* eq2 = ganadorLlave(seg);
+    seg = seg->siguiente;
+
+    agregarPartidoConPenales(&(fases[1].partidos), eq1, eq2, fechas);
+
+    ///C2 O3vsO4
+
+    eq1 = ganadorLlave(seg);
+    seg = seg->siguiente;
+    eq2 = ganadorLlave(seg);
+    seg = seg->siguiente;
+
+    agregarPartidoConPenales(&(fases[1].partidos), eq1, eq2, fechas);
+
+    ///C3 O5vsO6
+
+    eq1 = ganadorLlave(seg);
+    seg = seg->siguiente;
+    eq2 = ganadorLlave(seg);
+    seg = seg->siguiente;
+
+    agregarPartidoConPenales(&(fases[1].partidos), eq1, eq2, fechas);
+
+    ///C4 O7vsO8
+
+    eq1 = ganadorLlave(seg);
+    seg = seg->siguiente;
+    eq2 = ganadorLlave(seg);
+    seg = seg->siguiente;
+
+    agregarPartidoConPenales(&(fases[1].partidos), eq1, eq2, fechas);
+}
+
+void organizarSemis(fase fases[], char fechas [][30])
+{
+    fases[2].idFase = 2;
+    fases[2].partidos = NULL;
+    nodoPartido* seg = fases[1].partidos;
+
+    ///S1 C1vsC2
+
+    Equipo* eq1 = ganadorLlave(seg);
+    seg = seg->siguiente;
+    Equipo* eq2 = ganadorLlave(seg);
+    seg = seg->siguiente;
+
+    agregarPartidoConPenales(&(fases[2].partidos), eq1, eq2, fechas);
+
+    ///S2 C2VSC3
+
+    eq1 = ganadorLlave(seg);
+    seg = seg->siguiente;
+    eq2 = ganadorLlave(seg);
+    seg = seg->siguiente;
+
+    agregarPartidoConPenales(&(fases[2].partidos), eq1, eq2, fechas);
+}
+
+void organizarFinal(fase fases[], char fechas [][30])
+{
+    fases[3].idFase = 3;
+    fases[3].partidos = NULL;
+    nodoPartido* seg = fases[2].partidos;
+
+    ///F S1vsS2
+
+    Equipo* eq1 = ganadorLlave(seg);
+    seg = seg->siguiente;
+    Equipo* eq2 = ganadorLlave(seg);
+    seg = seg->siguiente;
+
+    agregarPartidoConPenales(&(fases[3].partidos), eq1, eq2, fechas);
+}
+
+void muestraFasesFinalesConResultados(fase fases[], int i)
+{
+    nodoPartido* auxiliar;
+    auxiliar = fases[i].partidos;   //octavos
+
+    i++;
+    nodoPartido* auxiliarCuartos;   //cuartos
+    auxiliarCuartos = fases[i].partidos;
+
+    i++;
+    nodoPartido* auxiliarSemis;
+    auxiliarSemis = fases[i].partidos;
+
+    i++;
+    nodoPartido* auxiliarFinal;
+    auxiliarFinal = fases[i].partidos;
+
+    printf("\n   OCTAVOS DE FINAL \t       CUARTOS DE FINAL  \t\t    SEMIFINAL \t\t           FINAL");
+
+    printf("\n\n%14s: %i(%i)__\n",auxiliar->partido.equipo1,auxiliar->partido.golesEq1,auxiliar->partido.penales1);
+    printf("%14s: %i(%i)  |\n",auxiliar->partido.equipo2,auxiliar->partido.golesEq2,auxiliar->partido.penales2);
+
+    printf("                      |____");
+    printf("%14s: %i(%i)______\n",auxiliarCuartos->partido.equipo1,auxiliarCuartos->partido.golesEq1,auxiliarCuartos->partido.penales1);
+    auxiliar = auxiliar->siguiente;
+    printf("                      |    %14s: %i(%i)      |\n",auxiliarCuartos->partido.equipo2,auxiliarCuartos->partido.golesEq2,auxiliarCuartos->partido.penales2);
+
+    printf("%14s: %i(%i)__|                              |\n",auxiliar->partido.equipo1,auxiliar->partido.golesEq1,auxiliar->partido.penales1);
+    printf("%14s: %i(%i)                                 |______%14s: %i(%i)________\n",auxiliar->partido.equipo2,auxiliar->partido.golesEq2,auxiliar->partido.penales2,auxiliarSemis->partido.equipo1,auxiliarSemis->partido.golesEq1,auxiliarSemis->partido.penales1);
+
+
+
+
+
+
+    auxiliarCuartos = auxiliarCuartos->siguiente;
+    auxiliar = auxiliar->siguiente;
+    printf("%14s: %i(%i)__                               |      %14s: %i(%i)        |\n",auxiliar->partido.equipo1,auxiliar->partido.golesEq1,auxiliar->partido.penales1,auxiliarSemis->partido.equipo2,auxiliarSemis->partido.golesEq2,auxiliarSemis->partido.penales2);
+    printf("%14s: %i(%i)  |                              |                                  |\n",auxiliar->partido.equipo2,auxiliar->partido.golesEq2,auxiliar->partido.penales2);
+    printf("                      |____");
+
+    printf("%14s: %i(%i)______|                                  |\n",auxiliarCuartos->partido.equipo1,auxiliarCuartos->partido.golesEq1,auxiliarCuartos->partido.penales1);
+
+    auxiliarSemis = auxiliarSemis->siguiente;
+    auxiliar = auxiliar->siguiente;
+    printf("                      |    %14s: %i(%i)                                         |\n",auxiliarCuartos->partido.equipo2,auxiliarCuartos->partido.golesEq2,auxiliarCuartos->partido.penales2);
+    printf("%14s: %i(%i)__|                                                                 |\n",auxiliar->partido.equipo1,auxiliar->partido.golesEq1,auxiliar->partido.penales1);
+
+    printf("%14s: %i(%i)                                                                    |\n",auxiliar->partido.equipo2,auxiliar->partido.golesEq2,auxiliar->partido.penales2);
+    printf("                                                                                        |%14s: %i(%i)\n",auxiliarFinal->partido.equipo1,auxiliarFinal->partido.golesEq1,auxiliarFinal->partido.penales1);
+    printf("                                                                                        |------\n");
+    printf("                                                                                        |%14s: %i(%i)",auxiliarFinal->partido.equipo2,auxiliarFinal->partido.golesEq2,auxiliarFinal->partido.penales2);
+
+
+
+    auxiliarCuartos = auxiliarCuartos->siguiente;
+    auxiliar = auxiliar->siguiente;
+
+    printf("\n%14s: %i(%i)__                                                                  |\n",auxiliar->partido.equipo1,auxiliar->partido.golesEq1,auxiliar->partido.penales1);
+    printf("%14s: %i(%i)  |                                                                 |\n",auxiliar->partido.equipo2,auxiliar->partido.golesEq2,auxiliar->partido.penales2);
+    printf("                      |____");
+    printf("%14s: %i(%i)______                                   | \n",auxiliarCuartos->partido.equipo1,auxiliarCuartos->partido.golesEq1,auxiliarCuartos->partido.penales1);
+    auxiliar = auxiliar->siguiente;
+    printf("                      |    %14s: %i(%i)      |                                  |\n",auxiliarCuartos->partido.equipo2,auxiliarCuartos->partido.golesEq2,auxiliarCuartos->partido.penales2);
+
+    printf("%14s: %i(%i)__|                              |                                  |\n",auxiliar->partido.equipo1,auxiliar->partido.golesEq1,auxiliar->partido.penales1);
+    printf("%14s: %i(%i)                                 |______%14s: %i(%i)________|\n",auxiliar->partido.equipo2,auxiliar->partido.golesEq2,auxiliar->partido.penales2,auxiliarSemis->partido.equipo1,auxiliarSemis->partido.golesEq1,auxiliarSemis->partido.penales1);
+
+    auxiliarCuartos = auxiliarCuartos->siguiente;
+    auxiliar = auxiliar->siguiente;
+    printf("%14s: %i(%i)__                               |      %14s: %i(%i)\n",auxiliar->partido.equipo1,auxiliar->partido.golesEq1,auxiliar->partido.penales1,auxiliarSemis->partido.equipo2,auxiliarSemis->partido.golesEq2,auxiliarSemis->partido.penales2);
+    printf("%14s: %i(%i)  |                              |\n",auxiliar->partido.equipo2,auxiliar->partido.golesEq2,auxiliar->partido.penales2);
+    printf("                      |____");
+    printf("%14s: %i(%i)______|\n",auxiliarCuartos->partido.equipo1,auxiliarCuartos->partido.golesEq1,auxiliarCuartos->partido.penales1);
+    auxiliar = auxiliar->siguiente;
+    printf("                      |    %14s: %i(%i)\n",auxiliarCuartos->partido.equipo2,auxiliarCuartos->partido.golesEq2,auxiliarCuartos->partido.penales2);
+
+    printf("%14s: %i(%i)__|\n",auxiliar->partido.equipo1,auxiliar->partido.golesEq1,auxiliar->partido.penales1);
+    printf("%14s: %i(%i)\n\n",auxiliar->partido.equipo2,auxiliar->partido.golesEq2,auxiliar->partido.penales2);
 }
 
 void print_partido(Partido *p)
 {
-    printf("%s",p->fecha);
-    printf("%s %d - %d %s", p->equipo1->nomEquipo, p->golesEq1, p->golesEq2, p->equipo2->nomEquipo);
+    printf("%s\n",p->fecha);
+    printf("%s %d - %d %s\n\n", p->equipo1->nomEquipo, p->golesEq1, p->golesEq2, p->equipo2->nomEquipo);
+}
+
+void clrscr() {
+    system("@cls||clear");
+}
+
+#define MAX_OPTION_LEN 40
+
+typedef struct {
+    char opciones[5][MAX_OPTION_LEN];
+    int cantOpciones;
+} menu;
+
+menu menus[6];
+char nomMenu[4][40] = {
+    "Generador de partidos",
+    "Generador de grupos manipulados",
+    "Resultados finales generados",
+    "Buscar partido"
+};
+
+
+void hidecursor() { // esconde el cursor de la consola
+    HANDLE consoleHandle = GetStdHandle(STD_OUTPUT_HANDLE);
+    CONSOLE_CURSOR_INFO info;
+    info.dwSize = 100;
+    info.bVisible = FALSE;
+    SetConsoleCursorInfo(consoleHandle, &info);
+}
+
+void showcursor() { // reaparece el cursor de la consola
+    HANDLE consoleHandle = GetStdHandle(STD_OUTPUT_HANDLE);
+    CONSOLE_CURSOR_INFO info;
+    info.dwSize = 100;
+    info.bVisible = TRUE;
+    SetConsoleCursorInfo(consoleHandle, &info);
+}
+
+void load_menus() {
+    printf("Cargando menu 0...\n");
+    // carga de menu 0
+    menus[0].cantOpciones = 3; 
+    strcpy(menus[0].opciones[0], "Generar partidos por azar");
+    strcpy(menus[0].opciones[1], "Generar partidos manipulados");
+    strcpy(menus[0].opciones[2], "Salir");
+    // carga de menu 1
+    menus[1].cantOpciones = 3;
+    strcpy(menus[1].opciones[0], "Clasifica");
+    strcpy(menus[1].opciones[1], "No clasifica");
+    strcpy(menus[1].opciones[2], "Volver");
+    menus[2].cantOpciones = 5;
+    strcpy(menus[2].opciones[0], "Mostrar partidos de finales");
+    strcpy(menus[2].opciones[1], "Mostrar tabla de posiciones");
+    strcpy(menus[2].opciones[2], "Mostrar partidos de fase de grupos");
+    strcpy(menus[2].opciones[3], "Buscar partidos");
+    strcpy(menus[2].opciones[4], "Salir");
+    menus[3].cantOpciones = 3;
+    strcpy(menus[3].opciones[0], "Buscar partidos de un equipo");
+    strcpy(menus[3].opciones[1], "Buscar partidos entre dos equipos");
+    strcpy(menus[3].opciones[2], "Volver");
+    printf("Menus cargados\n");
 }
 
 ///MAIN
+void print_menu(menu m, int option) {
+    for (int i = 0; i < m.cantOpciones; i++) {
+        if (i == option) {
+            back_color(HOVER_COLOR);
+            printf("%s", m.opciones[i]);
+            back_color(DEFAULT_COLOR);
+            printf("\n");
+        } else {
+            printf("%s", m.opciones[i]);
+            printf("\n");
+        }
+    }
+}
 
+char charGrupos[8] = {'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H'};
+
+void mostrarTablaGrupo(Grupo g) {
+    printf("----------------------------------------------------------------------------\n");
+    printf("GRUPO %c\n", g.letra);
+    printf("\t\tMP\tW\tD\tL\tGF\tGA\tGD\tPts\n");
+
+    nodoGrupoEquipo* seg = g.equipos;
+
+    while(seg != NULL)
+    {
+        printf("%s\t",seg->equipo->nomEquipo);
+        {
+            if(strlen(seg->equipo->nomEquipo)<=7)
+            {
+                printf("\t");
+            }
+        }
+        printf("%i\t", seg->equipo->mp);                                                  ///JUGADOS
+        printf("%i\t", seg->equipo->win);                                                 ///GANADOS
+        printf("%i\t", seg->equipo->mp - (seg->equipo->win + seg->equipo->loss));         ///EMPATADOS
+        printf("%i\t", seg->equipo->loss);                                                ///PERDIDOS
+        printf("%i\t", seg->equipo->gf);                                                  ///GOLES A FAVOR
+        printf("%i\t", seg->equipo->ga);                                                  ///GOLES EN CONTRA
+        printf("%i\t", seg->equipo->gf - seg->equipo->ga);                                ///DIFERENCIA DE GOL
+        printf("%i\n", seg->equipo->pts);                                                 ///PUNTOS
+        seg = seg->siguiente;
+    }
+}
+
+void mostrarTablasGrupos(Grupo grupos[8]) {
+    bool go = true;
+    int grupo = 0;
+    while (go) {
+        printf("Tablas de posiciones\n");
+        mostrarTablaGrupo(grupos[grupo]); printf("\n");
+        printf("<- Grupo anterior     Grupo siguiente ->\n");
+        printf("ESC para volver");
+        switch (getch()) {
+            case LEFT_KEY:
+                grupo--;
+                if (grupo < 0) grupo = 7;
+                break;
+            case RIGHT_KEY:
+                grupo++;
+                if (grupo > 7) grupo = 0;
+                break;
+            case ESC_KEY:
+                go = false;
+                break;
+        }
+        clrscr();
+    }
+}
+
+void mostrarPartidosGrupos(GrupoPartido partidos[8]) {
+    bool go = true;
+    int grupo = 0;
+    while (go) {
+        nodoPartido *aux = partidos[grupo].partidos;
+        printf("Partidos de grupos\n");
+        printf("----------------------------------------------------------------------------\n");
+        printf("GRUPO %c\n", charGrupos[grupo]);
+        while (aux != NULL) {
+            print_partido(&aux->partido);
+            aux = aux->siguiente;
+        }
+        printf("<- Grupo anterior     Grupo siguiente -->\n");
+        printf("ESC para volver");
+        switch (getch()) {
+            case LEFT_KEY:
+                grupo--;
+                if (grupo < 0) grupo = 7;
+                break;
+            case RIGHT_KEY:
+                grupo++;
+                if (grupo > 7) grupo = 0;
+                break;
+            case ESC_KEY:
+                go = false;
+                break;
+        }
+        clrscr();
+    }
+}
+
+int getGrupoDeEquipo(char* equipo, Grupo grupos[8]) {
+    for (int i = 0; i < 8; i++) {
+        nodoGrupoEquipo *aux = grupos[i].equipos;
+        while (aux != NULL) {
+            if (strcmp(aux->equipo->nomEquipo, equipo) == 0) {
+                return i;
+            }
+            aux = aux->siguiente;
+        }
+    }
+    return -1;
+}
+
+char* get_equipo(nodoEquipo *listaDeEquipos) {
+    bool flag = true;
+    char *equipoElegido;
+    printf("Ingrese el equipo: ");
+    fflush(stdin);
+    showcursor();
+    gets(equipoElegido);
+    hidecursor();
+    flag = existeEquipo(equipoElegido, listaDeEquipos);
+    while(!flag)
+    {
+        printf("El equipo no existe, vuelva a intentarlo: ");
+        fflush(stdin);
+        gets(equipoElegido);
+        flag = existeEquipo(equipoElegido, listaDeEquipos);
+    }
+    return equipoElegido;
+}
+
+void printPartidosDeEquipo(Grupo grupos[8], GrupoPartido *partidosGrupo, fase fases[4], nodoEquipo *listaDeEquipos) {
+    char equipoElegido[30];
+    printf("copiando equipo\n"); clrscr();
+    strcpy(equipoElegido, get_equipo(listaDeEquipos));
+    int grupo = getGrupoDeEquipo(equipoElegido, grupos);
+    nodoPartido *aux = partidosGrupo[grupo].partidos;
+    while (aux != NULL) {
+        if (strcmpi(aux->partido.equipo1->nomEquipo, equipoElegido) == 0 || strcmpi(aux->partido.equipo2->nomEquipo, equipoElegido) == 0) {
+            printf("Fase de grupos\n");
+            print_partido(&aux->partido);
+        }
+        aux = aux->siguiente;
+    }
+    char nomFases[4][30] = {"Octavos de final", "Cuartos de final", "Semifinales", "Final"};
+    for (int i = 0; i < 4; i++) {
+        aux = fases[i].partidos;
+        while (aux != NULL) {
+            if (strcmpi(aux->partido.equipo1->nomEquipo, equipoElegido) == 0 || strcmpi(aux->partido.equipo2->nomEquipo, equipoElegido) == 0) {
+                printf("%s\n", nomFases[i]);
+                print_partido(&aux->partido);
+            }
+            aux = aux->siguiente;
+        }
+    }
+}
+
+void volver_button() { // boton para volver al menu anterior
+    back_color(HOVER_COLOR);
+    printf("Volver");
+    back_color(DEFAULT_COLOR);
+    while (getch() != ENTER_KEY);
+}
+
+void print_title() {
+    printf("   _____ _                 _           _                  _                                  _ _       _ \n");
+    printf("  / ____(_)               | |         | |                | |                                | (_)     | |\n");
+    printf(" | (___  _ _ __ ___  _   _| | __ _  __| | ___  _ __    __| | ___   _ __ ___  _   _ _ __   __| |_  __ _| |\n");
+    printf("  \\___ \\| | '_ ` _ \\| | | | |/ _` |/ _` |/ _ \\| '__|  / _` |/ _ \\ | '_ ` _ \\| | | | '_ \\ / _` | |/ _` | |\n");
+    printf("  ____) | | | | | | | |_| | | (_| | (_| | (_) | |    | (_| |  __/ | | | | | | |_| | | | | (_| | | (_| | |\n");
+    printf(" |_____/|_|_| |_| |_|\\__,_|_|\\__,_|\\__,_|\\___/|_|     \\__,_|\\___| |_| |_| |_|\\__,_|_| |_|\\__,_|_|\\__,_|_|\n");
+    printf("\n");
+}
+
+///MAIN
 int main()
 {
     srand(time(NULL));
-    printf("SIMULADOR DEL MUNDIAL QATAR 2022:\n\n");
     Grupo grupos[VALIDOS_GRUPO];                                          ///ARREGLO DE CADA GRUPO (TIENE UNA LETRA Y UNA LISTA DE 4 PUNTEROS A EQUIPOS)
     char fechas[63][30];                                                  ///ARREGLO CON TODAS LAS FECHAS EN FORMATO STRING (p.ej. "25 de noviembre 10:00")
     nodoEquipo* listaDeEquipos = NULL;                                    ///LISTA DE TODOS LOS EQUIPOS
     GrupoPartido partidosGrupo[VALIDOS_GRUPO];                            ///ARREGLO DE PARTIDOS, CADA CELDA ES UN GRUPO CON 6 PARTIDOS (LISTA)
+    fase fases[4];                                                        ///ARREGLO DE FASES
 
     /// LECTURA DE ARCHIVOS
     leerArchivo(&listaDeEquipos);
@@ -779,12 +1352,135 @@ int main()
     /// INICIALIZACIONES
     inicializarGrupos(grupos, VALIDOS_GRUPO);
     cargarGrupos(grupos, VALIDOS_GRUPO, listaDeEquipos);
-    mostrarGrupos(grupos, VALIDOS_GRUPO);
 
-    /// FASE DE GRUPOS
-    jugarFaseDeGrupos(partidosGrupo, grupos, fechas, listaDeEquipos);
+    // INICIO DE MENU
+    load_menus();
+    hidecursor();
+    clrscr();
+    bool go = true;
+    int SelectedMenu = 0;
+    int SelectedOption = 0;
+    char equipoElegido[30];
+    bool flag;
+    while (go) {
+        gotoxy(0, 0);
+        menu m = menus[SelectedMenu];
+        print_title();
+        printf("%s", nomMenu[SelectedMenu]); printf("\n\n");
+        if (SelectedMenu == 1) printf("Equipo seleccionado: %s\n", equipoElegido); 
+        print_menu(m, SelectedOption);
+        int c = getch();
+        switch (c) {
+            case UP_KEY:
+                if (SelectedOption > 0) {
+                    SelectedOption--;
+                }
+                break;
+            case DOWN_KEY:
+                if (SelectedOption < m.cantOpciones - 1) {
+                    SelectedOption++;
+                }
+                break;
+            case ENTER_KEY:
+                switch (SelectedMenu) {
+                    case 0:
+                        switch (SelectedOption) {
+                            case 0: // generar fase de grupo al azar
+                                clrscr();
+                                crearArregloGrupoPartidosRandom(partidosGrupo, grupos, fechas);
+                                organizarOctavos(fases, grupos, fechas);
+                                organizarCuartos(fases, fechas);
+                                organizarSemis(fases, fechas);
+                                organizarFinal(fases, fechas);
+                                SelectedOption = 0;
+                                SelectedMenu = 2;
+                                break;
+                            case 1: // Generar fase de grupos manipulada
+                                strcpy(equipoElegido, get_equipo(listaDeEquipos));
+                                clrscr();
+                                SelectedMenu = 1;
+                                SelectedOption = 0;
+                                break;
+                            case 2: // salir
+                                go = false;
+                                break;
+                        }
+                        break;
+                    case 1:
+                        clrscr();
+                        switch (SelectedOption) {
+                            case 0:
+                                crearArregloGrupoPartidosManipulado(partidosGrupo, grupos, equipoElegido, true, fechas);
+                                organizarOctavos(fases, grupos, fechas);
+                                organizarCuartos(fases, fechas);
+                                organizarSemis(fases, fechas);
+                                organizarFinal(fases, fechas);
+                                SelectedMenu = 2;
+                                break;
+                            case 1:
+                                crearArregloGrupoPartidosManipulado(partidosGrupo, grupos, equipoElegido, false, fechas);
+                                organizarOctavos(fases, grupos, fechas);
+                                organizarCuartos(fases, fechas);
+                                organizarSemis(fases, fechas);
+                                organizarFinal(fases, fechas);
+                                SelectedMenu = 2;
+                                break;
+                            case 2:
+                                SelectedMenu = 0;
+                                break;
+                        }
+                        break;
+                    case 2: // menu de finales
+                        clrscr();
+                        switch (SelectedOption) {
+                            case 0: // muestra resultados
+                                muestraFasesFinalesConResultados(fases, 0);
+                                printf("\nESC para volver");
+                                while (getch() != ESC_KEY);
+                                clrscr();
+                                break;
+                            case 1: // muestra tabla de fase de grupos
+                                clrscr();
+                                mostrarTablasGrupos(grupos);
+                                break;
+                            case 2:
+                                mostrarPartidosGrupos(partidosGrupo);
+                                break;
+                            case 3: // buscar partidos
+                                SelectedMenu = 3;
+                                break;
+                            case 4: // cerrar
+                                go = false;
+                                break;
+                        }
+                        break;
+                    case 3:
+                        clrscr();
+                        switch (SelectedOption) {
+                            case 0: // buscar por equipo
+                                clrscr();
+                                listaDeEquipos = NULL;
+                                leerArchivo(&listaDeEquipos);
+                                printPartidosDeEquipo(grupos, partidosGrupo, fases, listaDeEquipos);
+                                volver_button();
+                                clrscr();
+                                break;
+                            case 1: // buscar por dos equipos
+                                // buscarPartidosPorEquipo(partidosGrupo);
+                                break;
+                            case 2: // volver
+                                SelectedMenu = 3;
+                                break;
+                        }
+                        break;
+                }
+                break;
+            case ESC_KEY:
+                go = false;
+                break;
+        }
+    }
 
-    /// OCTAVOS
 
     return 0;
 }
