@@ -175,6 +175,8 @@ void organizarFinal(fase[], char[][30]);                                        
 
 void print_partido(Partido*);                                                                     ///IMPRIME UN PARTIDO CON SU FECHA EN PANTALLA
 
+void print_partidoCPenales(Partido*);
+
 
 ///FUNCIONES MAIN
 
@@ -1152,6 +1154,12 @@ void print_partido(Partido *p)
     printf("%s %d - %d %s\n\n", p->equipo1->nomEquipo, p->golesEq1, p->golesEq2, p->equipo2->nomEquipo);
 }
 
+void print_partidoCPenales(Partido *p)
+{
+    printf("%s\n",p->fecha);
+    printf("%s %d[%i] - [%i]%d %s\n\n", p->equipo1->nomEquipo, p->golesEq1,p->penales1,p->penales2, p->golesEq2, p->equipo2->nomEquipo);
+}
+
 /// FUNCIONES DEL MENU
 
 void clrscr()
@@ -1373,7 +1381,7 @@ void printPartidosDeEquipo(Grupo grupos[8], GrupoPartido *partidosGrupo, fase fa
         while (aux != NULL) {
             if (strcmpi(aux->partido.equipo1->nomEquipo, equipoElegido) == 0 || strcmpi(aux->partido.equipo2->nomEquipo, equipoElegido) == 0) {
                 printf("%s\n", nomFases[i]);
-                print_partido(&aux->partido);
+                print_partidoCPenales(&aux->partido);
             }
             aux = aux->siguiente;
         }
